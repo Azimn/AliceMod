@@ -58,4 +58,27 @@ describe('buildToolsForProvider', () => {
       expect.objectContaining({ name: 'perform_web_search' })
     )
   })
+
+  it('does not expose scheduler tools to model providers', async () => {
+    const settingsStore = useSettingsStore()
+    settingsStore.updateSetting('aiProvider', 'ollama')
+    settingsStore.updateSetting('assistantTools', [
+      'get_current_datetime',
+      'schedule_task',
+      'manage_scheduled_tasks',
+    ])
+
+    const { buildToolsForProvider } = await import('../tools')
+    const tools = await buildToolsForProvider()
+
+    expect(tools).toContainEqual(
+      expect.objectContaining({ name: 'get_current_datetime' })
+    )
+    expect(tools).not.toContainEqual(
+      expect.objectContaining({ name: 'schedule_task' })
+    )
+    expect(tools).not.toContainEqual(
+      expect.objectContaining({ name: 'manage_scheduled_tasks' })
+    )
+  })
 })
