@@ -7,6 +7,7 @@ import {
 import { PROVIDER_CONFIGS } from './providerCatalog'
 
 const OPENAI_IMAGE_GENERATION_MODEL = 'gpt-image-2'
+const BLOCKED_MODEL_TOOLS = new Set(['schedule_task', 'manage_scheduled_tasks'])
 
 export async function buildToolsForProvider(): Promise<any[]> {
   const settings = useSettingsStore().config
@@ -14,6 +15,13 @@ export async function buildToolsForProvider(): Promise<any[]> {
 
   if (settings.assistantTools && settings.assistantTools.length > 0) {
     for (const toolName of settings.assistantTools) {
+      if (BLOCKED_MODEL_TOOLS.has(toolName)) {
+        console.warn(
+          `[ToolPolicy] ${toolName} is disabled for model use until scheduled command approval is hardened.`
+        )
+        continue
+      }
+
       const toolDefinition = PREDEFINED_OPENAI_TOOLS.find(
         (tool: ApiRequestBodyFunctionTool) => tool.name === toolName
       )
