@@ -74,8 +74,12 @@ jobs:
         working-directory: backend
         run: go mod download
 
+      - name: Run Go Tests
+        working-directory: backend
+        run: go test ./...
+
       - name: Install Node Dependencies
-        run: npm install
+        run: npm ci
         env:
           PYTHON: ${{ steps.setup_python.outputs.python-path }}
           npm_config_python: ${{ steps.setup_python.outputs.python-path }}
@@ -109,10 +113,8 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y build-essential
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            # Windows has build tools available by default
             echo "Using Windows build tools"
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            # macOS has build tools available via Xcode Command Line Tools
             echo "Using macOS build tools"
           fi
         shell: bash
@@ -143,7 +145,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
