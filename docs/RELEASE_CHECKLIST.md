@@ -25,10 +25,13 @@ Perform this on a clean Windows installation or a clean Windows user profile.
 - Kiki discovers or accepts an installed Ollama model.
 - Text conversation works through Ollama.
 - Local embeddings initialize without cloud fallback.
-- Local Piper produces speech without cloud fallback.
+- Piper readiness is false when the real Piper runtime is unavailable.
+- Local Piper produces intelligible speech, not generated placeholder audio.
+- Removing or breaking a Piper dependency surfaces a local TTS error.
 - Microphone VAD enters listening state.
 - Saying `kiki` triggers the wake path.
 - Ambient speech without the wake word is ignored.
+- The wake probe sends raw PCM through the lightweight local transcription path.
 - The selected Whisper model is used after wake detection.
 - A larger Whisper model can be selected and downloaded on first use.
 - Memory save and recall work locally.
@@ -66,14 +69,14 @@ Run with a stored OpenAI API key present to test that local selection still wins
 - Default wake word is `kiki`.
 - Onboarding identifies the assistant as Kiki.
 - Native command and directory permission dialogs identify the assistant as Kiki.
-- Remaining `Alice` identifiers are either internal compatibility names or explicit upstream attribution.
+- Remaining `Alice` identifiers are either internal compatibility names, explicit upstream attribution, or documented legacy UI cleanup items.
 
 ## Release preparation
 
 - PR diff is reviewed for accidental unrelated replacements.
 - PR description matches implemented behavior.
 - No unresolved review threads remain.
-- Release notes describe local-first defaults, provider cost boundaries, wake-word changes, Whisper model selection, safety restrictions, and updater isolation.
+- Release notes describe local-first defaults, provider cost boundaries, strict Piper readiness, wake-word changes, Whisper model selection, safety restrictions, and updater isolation.
 - The release tag matches the package version used by Electron Builder.
 - All release artifacts are attached to the GitHub release.
 - Automatic update from the newly published Kiki release is tested from the previous Kiki build.
