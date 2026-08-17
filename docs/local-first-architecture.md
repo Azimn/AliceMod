@@ -12,7 +12,7 @@ The assistant's local execution path must retain the same tool-call history sema
 
 Selecting a local provider is an explicit cost and privacy boundary. A failure in local STT, TTS, embeddings, summarization, or generation must not silently invoke a metered cloud service merely because credentials happen to exist in settings. The application should surface the local failure and offer the user an explicit choice to switch providers. Cloud fallback can be implemented only as a separately enabled policy that clearly identifies the destination service.
 
-The current TTS implementation does not yet satisfy this invariant. When Piper is unavailable or synthesis fails, it calls the OpenAI TTS fallback. A fresh local-only install is protected because the OpenAI client refuses to initialize without a key, but a user with an existing OpenAI key could incur unintended usage. This is a priority fix before local-first mode is considered complete.
+The TTS and embedding paths now enforce this boundary. When local Piper is selected, a local synthesis failure is surfaced instead of being rerouted to OpenAI. When local embeddings are explicitly selected, a local embedding failure returns no embedding rather than invoking OpenAI even if an OpenAI key happens to be stored. Google TTS likewise stays on the selected provider instead of silently failing over to OpenAI.
 
 ## Voice architecture
 
