@@ -18,6 +18,10 @@ const WINDOWS_ASSETS = {
     sha256: 'd2425b12dc746a2b044148c6100440d4065876ac4ed6e3eb13a68437b7719796',
     archiveName: 'ffmpeg-8.1-win64-gpl.zip',
   },
+  whisperBaseModel: {
+    url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-base.bin',
+    sha1: '465707469ff3a37a2b9b8d8f89f2f99de7299dac',
+  },
 }
 
 function download(url, destination) {
@@ -49,17 +53,17 @@ function download(url, destination) {
   })
 }
 
-function sha256(filePath) {
-  const hash = crypto.createHash('sha256')
+function digest(filePath, algorithm) {
+  const hash = crypto.createHash(algorithm)
   hash.update(fs.readFileSync(filePath))
   return hash.digest('hex')
 }
 
-function verify(filePath, expected) {
-  const actual = sha256(filePath)
+function verifyDigest(filePath, algorithm, expected) {
+  const actual = digest(filePath, algorithm)
   if (actual !== expected) {
     throw new Error(
-      `SHA-256 mismatch for ${path.basename(filePath)}. Expected ${expected}, got ${actual}`
+      `${algorithm.toUpperCase()} mismatch for ${path.basename(filePath)}. Expected ${expected}, got ${actual}`
     )
   }
 }
@@ -108,10 +112,26 @@ async function installVerifiedArchive(asset, installer) {
   try {
     console.log(`Downloading verified runtime asset: ${asset.url}`)
     await download(asset.url, archivePath)
-    verify(archivePath, asset.sha256)
+    verifyDigest(archivePath, 'sha256', asset.sha256)
     console.log(`Verified SHA-256: ${asset.sha256}`)
     expandZip(archivePath, extractDir)
     installer(extractDir)
+  } finally {
+    fs.rmSync(workDir, { recursive: true, force: true })
+  }
+}
+
+async function installVerifiedFile(asset, destination) {
+  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'kiki-runtime-'))
+  const temporaryPath = path.join(workDir, path.basename(destination))
+
+  try {
+    console.log(`Downloading verified model asset: ${asset.url}`)
+    await download(asset.url, temporaryPath)
+    verifyDigest(temporaryPath, 'sha1', asset.sha1)
+    console.log(`Verified SHA-1: ${asset.sha1}`)
+    fs.mkdirSync(path.dirname(destination), { recursive: true })
+    fs.copyFileSync(temporaryPath, destination)
   } finally {
     fs.rmSync(workDir, { recursive: true, force: true })
   }
@@ -126,8 +146,11 @@ async function prepareWindowsRuntime() {
     throw new Error(`Unsupported Windows architecture for pinned runtime: ${process.arch}`)
   }
 
-  const binDir = path.join(process.cwd(), 'resources', 'backend', 'bin')
+  const backendDir = path.join(process.cwd(), 'resources', 'backend')
+  const binDir = path.join(backendDir, 'bin')
+  const modelsDir = path.join(backendDir, 'models')
   fs.mkdirSync(binDir, { recursive: true })
+  fs.mkdirSync(modelsDir, { recursive: true })
 
   const whisperTarget = path.join(binDir, 'main.exe')
   if (!fs.existsSync(whisperTarget)) {
@@ -155,6 +178,13 @@ async function prepareWindowsRuntime() {
     })
   } else {
     console.log(`FFmpeg runtime already present: ${ffmpegTarget}`)
+  }
+
+  const baseModelTarget = path.join(modelsDir, 'whisper-base.bin')
+  if (!fs.existsSync(baseModelTarget)) {
+    await installVerifiedFile(WINDOWS_ASSETS.whisperBaseModel, baseModelTarget)
+  } else {
+    console.log(`Whisper Base model already present: ${baseModelTarget}`)
   }
 }
 
