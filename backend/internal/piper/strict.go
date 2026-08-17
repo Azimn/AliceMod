@@ -16,7 +16,11 @@ func (s *TTSService) RuntimeReady() bool {
 		return false
 	}
 
-	if _, err := os.Stat(s.config.PiperPath); err != nil {
+	info, err := os.Stat(s.config.PiperPath)
+	if err != nil || !info.Mode().IsRegular() {
+		return false
+	}
+	if runtime.GOOS != "windows" && info.Mode().Perm()&0o111 == 0 {
 		return false
 	}
 
