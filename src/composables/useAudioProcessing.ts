@@ -240,15 +240,15 @@ export function useAudioProcessing() {
     return { hasWakeWord: false, command: transcription }
   }
 
-  const transcribeWakeProbe = async (wavBuffer: ArrayBuffer) => {
+  const transcribeWakeProbe = async (audio: Float32Array) => {
     const language = settingsStore.config.localSttLanguage || 'auto'
     const wakeModel =
       language === 'auto' || language === 'en'
         ? 'whisper-tiny.en'
         : 'whisper-base'
-    const file = new File([wavBuffer], 'wake-probe.wav', { type: 'audio/wav' })
-    const result = await backendApi.transcribeFile(
-      file,
+    const result = await backendApi.transcribeAudio(
+      audio,
+      16000,
       language === 'auto' ? undefined : language,
       wakeModel
     )
@@ -276,7 +276,7 @@ export function useAudioProcessing() {
         awaitingWakeWord.value = true
         wakeWordDetected.value = false
 
-        const wakeProbe = await transcribeWakeProbe(wavBuffer)
+        const wakeProbe = await transcribeWakeProbe(audio)
         const wakeResult = checkForWakeWord(wakeProbe)
         if (!wakeResult.hasWakeWord) {
           console.log(
