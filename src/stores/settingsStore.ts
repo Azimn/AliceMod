@@ -38,10 +38,13 @@ export interface AliceSettings {
   VITE_GOOGLE_API_KEY: string
   sttProvider: 'openai' | 'groq' | 'google' | 'local'
   aiProvider: AIProviderKey
+
+  // Local Go Backend STT settings
   localSttModel: string
   localSttLanguage: string
   localSttEnabled: boolean
   localSttWakeWord: string
+
   ollamaBaseUrl: string
   lmStudioBaseUrl: string
   zaiBaseUrl: string
@@ -49,6 +52,7 @@ export interface AliceSettings {
   deepseekBaseUrl: string
   codexAuthConnected: boolean
   codexAccountLabel: string
+
   assistantModel: string
   assistantSystemPrompt: string
   assistantTemperature: number
@@ -84,31 +88,55 @@ export interface AliceSettings {
   ragPaths: string[]
   ragTopK: number
   ragMaxContextChars: number
+
   microphoneToggleHotkey: string
   mutePlaybackHotkey: string
   takeScreenshotHotkey: string
+
   VITE_JACKETT_API_KEY: string
   VITE_JACKETT_URL: string
   VITE_QB_URL: string
   VITE_QB_USERNAME: string
   VITE_QB_PASSWORD: string
+
   VITE_TAVILY_API_KEY: string
+
   VITE_SEARXNG_URL: string
   VITE_SEARXNG_API_KEY: string
+
   websocketPort: number
+
   approvedCommands: string[]
   onboardingCompleted: boolean
 }
 
 function hasMinimumConfigForOnboarding(config: AliceSettings): boolean {
-  if (config.VITE_OPENAI_API_KEY?.trim()) return true
-  if (config.VITE_OPENROUTER_API_KEY?.trim()) return true
-  if (config.VITE_ZAI_API_KEY?.trim()) return true
-  if (config.VITE_MINIMAX_API_KEY?.trim()) return true
-  if (config.VITE_DEEPSEEK_API_KEY?.trim()) return true
-  if (config.codexAuthConnected) return true
-  if (config.aiProvider === 'ollama') return Boolean(config.ollamaBaseUrl?.trim())
-  if (config.aiProvider === 'lm-studio') return Boolean(config.lmStudioBaseUrl?.trim())
+  if (config.VITE_OPENAI_API_KEY?.trim()) {
+    return true
+  }
+  if (config.VITE_OPENROUTER_API_KEY?.trim()) {
+    return true
+  }
+  if (config.VITE_ZAI_API_KEY?.trim()) {
+    return true
+  }
+  if (config.VITE_MINIMAX_API_KEY?.trim()) {
+    return true
+  }
+  if (config.VITE_DEEPSEEK_API_KEY?.trim()) {
+    return true
+  }
+  if (config.codexAuthConnected) {
+    return true
+  }
+
+  if (config.aiProvider === 'ollama') {
+    return Boolean(config.ollamaBaseUrl?.trim())
+  }
+  if (config.aiProvider === 'lm-studio') {
+    return Boolean(config.lmStudioBaseUrl?.trim())
+  }
+
   return false
 }
 
@@ -122,10 +150,12 @@ const defaultSettings: AliceSettings = {
   VITE_GOOGLE_API_KEY: '',
   sttProvider: 'local',
   aiProvider: 'ollama',
+
   localSttModel: 'whisper-base',
   localSttLanguage: 'auto',
   localSttEnabled: true,
   localSttWakeWord: 'kiki',
+
   ollamaBaseUrl: 'http://localhost:11434',
   lmStudioBaseUrl: 'http://localhost:1234',
   zaiBaseUrl: ZAI_CODING_BASE_URL,
@@ -133,6 +163,7 @@ const defaultSettings: AliceSettings = {
   deepseekBaseUrl: DEEPSEEK_OPENAI_BASE_URL,
   codexAuthConnected: false,
   codexAccountLabel: '',
+
   assistantModel: PROVIDER_CONFIGS.ollama.defaultModel,
   assistantSystemPrompt: DEFAULT_PERSONA_PROMPT,
   assistantTemperature: 0.7,
@@ -166,18 +197,24 @@ const defaultSettings: AliceSettings = {
   ragPaths: [],
   ragTopK: 5,
   ragMaxContextChars: 1500,
+
   microphoneToggleHotkey: 'Alt+M',
   mutePlaybackHotkey: 'Alt+S',
   takeScreenshotHotkey: 'Alt+C',
+
   VITE_JACKETT_API_KEY: '',
   VITE_JACKETT_URL: '',
   VITE_QB_URL: '',
   VITE_QB_USERNAME: '',
   VITE_QB_PASSWORD: '',
+
   VITE_TAVILY_API_KEY: '',
+
   VITE_SEARXNG_URL: '',
   VITE_SEARXNG_API_KEY: '',
+
   websocketPort: 5421,
+
   approvedCommands: ['ls', 'dir'],
   onboardingCompleted: false,
 }
@@ -192,10 +229,12 @@ const settingKeyToLabelMap: Record<keyof AliceSettings, string> = {
   VITE_GOOGLE_API_KEY: 'Google API Key',
   sttProvider: 'Speech-to-Text Provider',
   aiProvider: 'AI Provider',
+
   localSttModel: 'Local STT Model',
   localSttLanguage: 'Language',
   localSttEnabled: 'Enable Wake Word',
   localSttWakeWord: 'Wake Word',
+
   ollamaBaseUrl: 'Ollama Base URL',
   lmStudioBaseUrl: 'LM Studio Base URL',
   zaiBaseUrl: 'Z.ai Base URL',
@@ -203,6 +242,7 @@ const settingKeyToLabelMap: Record<keyof AliceSettings, string> = {
   deepseekBaseUrl: 'DeepSeek Base URL',
   codexAuthConnected: 'ChatGPT Codex authorization',
   codexAccountLabel: 'ChatGPT Codex account',
+
   assistantModel: 'Assistant Model',
   assistantSystemPrompt: 'Assistant Persona Prompt',
   assistantTemperature: 'Assistant Temperature',
@@ -227,19 +267,31 @@ const settingKeyToLabelMap: Record<keyof AliceSettings, string> = {
   microphoneToggleHotkey: 'Microphone Toggle Hotkey',
   mutePlaybackHotkey: 'Mute Playback Hotkey',
   takeScreenshotHotkey: 'Take Screenshot Hotkey',
+
   VITE_JACKETT_API_KEY: 'Jackett API Key (Torrents)',
   VITE_JACKETT_URL: 'Jackett URL (Torrents)',
-  VITE_QB_URL: 'qBittorrent URL',
+  VITE_QB_URL: 'qBittorrent URL (Torrents)',
   VITE_QB_USERNAME: 'qBittorrent Username',
   VITE_QB_PASSWORD: 'qBittorrent Password',
+
   VITE_TAVILY_API_KEY: 'Tavily API Key (Web Search)',
+
   VITE_SEARXNG_URL: 'SearXNG Instance URL',
   VITE_SEARXNG_API_KEY: 'SearXNG API Key (optional)',
+
   websocketPort: 'WebSocket Port',
   mcpServersConfig: 'MCP Servers JSON Configuration',
   approvedCommands: 'Approved Commands',
   onboardingCompleted: 'Onboarding Completed',
 }
+
+const ESSENTIAL_CORE_API_KEYS: (keyof AliceSettings)[] = [
+  'VITE_OPENAI_API_KEY',
+  'VITE_OPENROUTER_API_KEY',
+  'VITE_ZAI_API_KEY',
+  'VITE_MINIMAX_API_KEY',
+  'VITE_DEEPSEEK_API_KEY',
+]
 
 function requiresOpenAIKey(config: AliceSettings): boolean {
   return (
@@ -265,61 +317,124 @@ export const useSettingsStore = defineStore('settings', () => {
   ): { settings: AliceSettings; migrated: boolean } => {
     const validated = { ...defaultSettings, ...loadedSettings }
     let migrated = false
+
     if ((validated.sttProvider as any) === 'transformers') {
+      console.log(
+        '🔄 Migrating settings: Converting old "transformers" provider to "local" (Go backend)'
+      )
       validated.sttProvider = 'local'
       migrated = true
-      if ((loadedSettings as any).transformersModel) validated.localSttModel = (loadedSettings as any).transformersModel
-      if ((loadedSettings as any).transformersLanguage) validated.localSttLanguage = (loadedSettings as any).transformersLanguage
-      if ((loadedSettings as any).transformersWakeWordEnabled !== undefined) validated.localSttEnabled = (loadedSettings as any).transformersWakeWordEnabled
-      if ((loadedSettings as any).transformersWakeWord) validated.localSttWakeWord = (loadedSettings as any).transformersWakeWord
+
+      if ((loadedSettings as any).transformersModel) {
+        validated.localSttModel = (loadedSettings as any).transformersModel
+        console.log(`📝 Migrated STT model: ${validated.localSttModel}`)
+      }
+      if ((loadedSettings as any).transformersLanguage) {
+        validated.localSttLanguage = (
+          loadedSettings as any
+        ).transformersLanguage
+        console.log(`🌐 Migrated STT language: ${validated.localSttLanguage}`)
+      }
+      if ((loadedSettings as any).transformersWakeWordEnabled !== undefined) {
+        validated.localSttEnabled = (
+          loadedSettings as any
+        ).transformersWakeWordEnabled
+        console.log(`🎤 Migrated STT enabled: ${validated.localSttEnabled}`)
+      }
+      if ((loadedSettings as any).transformersWakeWord) {
+        validated.localSttWakeWord = (
+          loadedSettings as any
+        ).transformersWakeWord
+        console.log(`🎯 Migrated wake word: ${validated.localSttWakeWord}`)
+      }
+      console.log('✅ Settings migration completed successfully')
     }
+
     const validSTTProviders = ['openai', 'groq', 'google', 'local'] as const
     if (!validSTTProviders.includes(validated.sttProvider as any)) {
       validated.sttProvider = 'local'
       migrated = true
     }
-    const validAIProviders = ['openai', 'openrouter', 'ollama', 'lm-studio', 'zai', 'minimax', 'deepseek', 'codex'] as const
+
+    const validAIProviders = [
+      'openai',
+      'openrouter',
+      'ollama',
+      'lm-studio',
+      'zai',
+      'minimax',
+      'deepseek',
+      'codex',
+    ] as const
     if (!validAIProviders.includes(validated.aiProvider as any)) {
       validated.aiProvider = 'ollama'
       migrated = true
     }
-    const safeAssistantModel = getSafeProviderModel(validated.aiProvider, validated.assistantModel)
+
+    const safeAssistantModel = getSafeProviderModel(
+      validated.aiProvider,
+      validated.assistantModel
+    )
     if (safeAssistantModel !== validated.assistantModel) {
       validated.assistantModel = safeAssistantModel
       migrated = true
     }
-    const safeSummarizationModel = getSafeProviderModel(validated.aiProvider, validated.SUMMARIZATION_MODEL)
+
+    const safeSummarizationModel = getSafeProviderModel(
+      validated.aiProvider,
+      validated.SUMMARIZATION_MODEL
+    )
     if (safeSummarizationModel !== validated.SUMMARIZATION_MODEL) {
       validated.SUMMARIZATION_MODEL = safeSummarizationModel
       migrated = true
     }
-    if (!validated.VITE_OPENAI_API_KEY?.trim() && validated.aiProvider !== 'openai' && validated.embeddingProvider === 'openai') {
+
+    if (
+      !validated.VITE_OPENAI_API_KEY?.trim() &&
+      validated.aiProvider !== 'openai' &&
+      validated.embeddingProvider === 'openai'
+    ) {
       validated.embeddingProvider = 'local'
       migrated = true
     }
+
     if (!loadedSettings.localSttWakeWord || validated.localSttWakeWord === 'alice') {
       validated.localSttWakeWord = 'kiki'
       migrated = true
     }
+
     if (!Array.isArray(validated.ragPaths)) {
       validated.ragPaths = []
       migrated = true
     }
+
     if (!Number.isFinite(validated.ragTopK) || validated.ragTopK < 1) {
       validated.ragTopK = defaultSettings.ragTopK
       migrated = true
     }
-    if (!Number.isFinite(validated.ragMaxContextChars) || validated.ragMaxContextChars < 300) {
+
+    if (
+      !Number.isFinite(validated.ragMaxContextChars) ||
+      validated.ragMaxContextChars < 300
+    ) {
       validated.ragMaxContextChars = defaultSettings.ragMaxContextChars
       migrated = true
     }
+
     if (validated.sttProvider === 'local') {
-      const validModelIds = ['whisper-tiny.en', 'whisper-base', 'whisper-small', 'whisper-medium', 'whisper-large']
+      const validModelIds = [
+        'whisper-tiny.en',
+        'whisper-base',
+        'whisper-small',
+        'whisper-medium',
+        'whisper-large',
+      ]
       if (!validModelIds.includes(validated.localSttModel)) {
         validated.localSttModel = 'whisper-base'
         migrated = true
       }
     }
+
     return { settings: validated, migrated }
   }
 
@@ -327,19 +442,48 @@ export const useSettingsStore = defineStore('settings', () => {
 
   const areEssentialSettingsProvided = computed(() => {
     if (!isProduction.value) return true
-    const essentialKeys: (keyof AliceSettings)[] = ['assistantModel', 'SUMMARIZATION_MODEL']
-    if (settings.value.aiProvider === 'openai') essentialKeys.push('VITE_OPENAI_API_KEY')
-    else if (settings.value.aiProvider === 'openrouter') essentialKeys.push('VITE_OPENROUTER_API_KEY')
-    else if (settings.value.aiProvider === 'zai') essentialKeys.push('VITE_ZAI_API_KEY', 'zaiBaseUrl')
-    else if (settings.value.aiProvider === 'minimax') essentialKeys.push('VITE_MINIMAX_API_KEY', 'minimaxBaseUrl')
-    else if (settings.value.aiProvider === 'deepseek') essentialKeys.push('VITE_DEEPSEEK_API_KEY', 'deepseekBaseUrl')
-    else if (settings.value.aiProvider === 'codex') essentialKeys.push('codexAuthConnected')
-    else if (settings.value.aiProvider === 'ollama') essentialKeys.push('ollamaBaseUrl')
-    else if (settings.value.aiProvider === 'lm-studio') essentialKeys.push('lmStudioBaseUrl')
-    if (requiresOpenAIKey(settings.value)) essentialKeys.push('VITE_OPENAI_API_KEY')
-    if (settings.value.sttProvider === 'groq') essentialKeys.push('VITE_GROQ_API_KEY')
-    if (settings.value.sttProvider === 'google' || settings.value.ttsProvider === 'google') essentialKeys.push('VITE_GOOGLE_API_KEY')
-    if (settings.value.sttProvider === 'local') essentialKeys.push('localSttModel')
+    const essentialKeys: (keyof AliceSettings)[] = [
+      'assistantModel',
+      'SUMMARIZATION_MODEL',
+    ]
+
+    if (settings.value.aiProvider === 'openai') {
+      essentialKeys.push('VITE_OPENAI_API_KEY')
+    } else if (settings.value.aiProvider === 'openrouter') {
+      essentialKeys.push('VITE_OPENROUTER_API_KEY')
+    } else if (settings.value.aiProvider === 'zai') {
+      essentialKeys.push('VITE_ZAI_API_KEY', 'zaiBaseUrl')
+    } else if (settings.value.aiProvider === 'minimax') {
+      essentialKeys.push('VITE_MINIMAX_API_KEY', 'minimaxBaseUrl')
+    } else if (settings.value.aiProvider === 'deepseek') {
+      essentialKeys.push('VITE_DEEPSEEK_API_KEY', 'deepseekBaseUrl')
+    } else if (settings.value.aiProvider === 'codex') {
+      essentialKeys.push('codexAuthConnected')
+    } else if (settings.value.aiProvider === 'ollama') {
+      essentialKeys.push('ollamaBaseUrl')
+    } else if (settings.value.aiProvider === 'lm-studio') {
+      essentialKeys.push('lmStudioBaseUrl')
+    }
+
+    if (requiresOpenAIKey(settings.value)) {
+      essentialKeys.push('VITE_OPENAI_API_KEY')
+    }
+
+    if (settings.value.sttProvider === 'groq') {
+      essentialKeys.push('VITE_GROQ_API_KEY')
+    }
+
+    if (
+      settings.value.sttProvider === 'google' ||
+      settings.value.ttsProvider === 'google'
+    ) {
+      essentialKeys.push('VITE_GOOGLE_API_KEY')
+    }
+
+    if (settings.value.sttProvider === 'local') {
+      essentialKeys.push('localSttModel')
+    }
+
     return essentialKeys.every(key => {
       const value = settings.value[key]
       if (typeof value === 'string') return !!value.trim()
@@ -352,111 +496,718 @@ export const useSettingsStore = defineStore('settings', () => {
 
   const areCoreApiKeysSufficientForTesting = computed(() => {
     if (!isProduction.value) return true
-    if (requiresOpenAIKey(settings.value) && !settings.value.VITE_OPENAI_API_KEY?.trim()) return false
-    if (settings.value.aiProvider === 'openrouter') return !!settings.value.VITE_OPENROUTER_API_KEY?.trim()
-    if (settings.value.aiProvider === 'zai') return !!settings.value.VITE_ZAI_API_KEY?.trim() && !!settings.value.zaiBaseUrl?.trim()
-    if (settings.value.aiProvider === 'minimax') return !!settings.value.VITE_MINIMAX_API_KEY?.trim() && !!settings.value.minimaxBaseUrl?.trim()
-    if (settings.value.aiProvider === 'deepseek') return !!settings.value.VITE_DEEPSEEK_API_KEY?.trim() && !!settings.value.deepseekBaseUrl?.trim()
-    if (settings.value.aiProvider === 'ollama') return !!settings.value.ollamaBaseUrl?.trim()
-    if (settings.value.aiProvider === 'lm-studio') return !!settings.value.lmStudioBaseUrl?.trim()
-    if (settings.value.aiProvider === 'codex') return settings.value.codexAuthConnected
+
+    const needsOpenAI = requiresOpenAIKey(settings.value)
+
+    if (needsOpenAI && !settings.value.VITE_OPENAI_API_KEY?.trim()) {
+      return false
+    }
+
+    if (settings.value.aiProvider === 'openrouter') {
+      return !!settings.value.VITE_OPENROUTER_API_KEY?.trim()
+    }
+
+    if (settings.value.aiProvider === 'zai') {
+      return (
+        !!settings.value.VITE_ZAI_API_KEY?.trim() &&
+        !!settings.value.zaiBaseUrl?.trim()
+      )
+    }
+
+    if (settings.value.aiProvider === 'minimax') {
+      return (
+        !!settings.value.VITE_MINIMAX_API_KEY?.trim() &&
+        !!settings.value.minimaxBaseUrl?.trim()
+      )
+    }
+
+    if (settings.value.aiProvider === 'deepseek') {
+      return (
+        !!settings.value.VITE_DEEPSEEK_API_KEY?.trim() &&
+        !!settings.value.deepseekBaseUrl?.trim()
+      )
+    }
+
+    if (settings.value.aiProvider === 'ollama') {
+      return !!settings.value.ollamaBaseUrl?.trim()
+    }
+
+    if (settings.value.aiProvider === 'lm-studio') {
+      return !!settings.value.lmStudioBaseUrl?.trim()
+    }
+
+    if (settings.value.aiProvider === 'codex') {
+      return settings.value.codexAuthConnected
+    }
+
     return true
   })
 
-  const config = computed<Readonly<AliceSettings>>(() => settings.value)
+  const config = computed<Readonly<AliceSettings>>(() => {
+    if (isProduction.value) {
+      return settings.value
+    }
 
-  async function saveSettingsToFile(): Promise<boolean> {
-    if (!isProduction.value && !window.settingsAPI?.saveSettings) {
-      successMessage.value = 'Settings updated (Dev Mode - Not saved to file unless IPC available)'
-      return true
+    const envOverrides = Object.fromEntries(
+      Object.entries(import.meta.env)
+        .filter(
+          ([key]) =>
+            key.startsWith('VITE_') ||
+            key.startsWith('assistant') ||
+            key === 'MAX_HISTORY_MESSAGES_FOR_API' ||
+            key === 'SUMMARIZATION_MESSAGE_COUNT' ||
+            key === 'SUMMARIZATION_MODEL' ||
+            key === 'SUMMARIZATION_SYSTEM_PROMPT' ||
+            key === 'sttProvider' ||
+            key === 'aiProvider' ||
+            key === 'onboardingCompleted'
+        )
+        .map(([key, value]) => {
+          if (
+            key === 'MAX_HISTORY_MESSAGES_FOR_API' ||
+            key === 'SUMMARIZATION_MESSAGE_COUNT' ||
+            key === 'assistantTemperature' ||
+            key === 'assistantTopP' ||
+            key === 'ragTopK' ||
+            key === 'ragMaxContextChars'
+          ) {
+            return [key, parseFloat(String(value))]
+          }
+          if (key === 'assistantTools' && typeof value === 'string') {
+            return [
+              key,
+              value
+                .split(',')
+                .map(t => t.trim())
+                .filter(Boolean),
+            ]
+          }
+          return [key, String(value)]
+        })
+    )
+
+    return {
+      ...defaultSettings,
+      ...envOverrides,
+      ...settings.value,
     }
-    isSaving.value = true
-    error.value = null
-    try {
-      const saveResult = await window.settingsAPI.saveSettings({ ...settings.value, assistantTools: Array.from(settings.value.assistantTools || []), ragPaths: Array.from(settings.value.ragPaths || []), approvedCommands: Array.from(settings.value.approvedCommands || []) })
-      isSaving.value = false
-      if (saveResult.success) return true
-      error.value = `Failed to save settings to file: ${saveResult.error || 'Unknown error'}`
-      return false
-    } catch (e: any) {
-      error.value = `Error during settings save: ${e.message}`
-      isSaving.value = false
-      return false
-    }
-  }
+  })
 
   async function loadSettings() {
-    if (initialLoadAttempted.value) return
+    if (initialLoadAttempted.value) {
+      return
+    }
+
     initialLoadAttempted.value = true
     isLoading.value = true
+    error.value = null
+    successMessage.value = null
+    coreOpenAISettingsValid.value = false
     try {
-      const loaded = window.settingsAPI ? await window.settingsAPI.loadSettings() : null
-      const result = validateAndFixSettings((loaded || {}) as Partial<AliceSettings>)
-      settings.value = result.settings
-      if (result.migrated && window.settingsAPI) await saveSettingsToFile()
+      if (isProduction.value) {
+        const loaded = await window.settingsAPI.loadSettings()
+        if (loaded) {
+          const result = validateAndFixSettings(
+            loaded as Partial<AliceSettings>
+          )
+          settings.value = result.settings
+          await ensureOnboardingStateConsistency()
+
+          let needsSave = false
+          if (result.migrated) {
+            needsSave = true
+            console.log('💾 Automatically saving migrated settings to file')
+          }
+
+          if (
+            !settings.value.onboardingCompleted &&
+            hasMinimumConfigForOnboarding(settings.value)
+          ) {
+            settings.value.onboardingCompleted = true
+            needsSave = true
+          }
+
+          if (needsSave) {
+            await saveSettingsToFile()
+          }
+        } else {
+          const result = validateAndFixSettings({})
+          settings.value = result.settings
+        }
+      } else {
+        let devCombinedSettings: AliceSettings = { ...defaultSettings }
+        if (window.settingsAPI) {
+          const loadedDevSettings = await window.settingsAPI.loadSettings()
+          if (loadedDevSettings) {
+            devCombinedSettings = {
+              ...devCombinedSettings,
+              ...(loadedDevSettings as Partial<AliceSettings>),
+            }
+
+            if (
+              !devCombinedSettings.onboardingCompleted &&
+              hasMinimumConfigForOnboarding(devCombinedSettings)
+            ) {
+              devCombinedSettings.onboardingCompleted = true
+            }
+          }
+        }
+        for (const key of Object.keys(defaultSettings) as Array<
+          keyof AliceSettings
+        >) {
+          if (key === 'onboardingCompleted') {
+            continue
+          }
+
+          if (import.meta.env[key]) {
+            const envValue = import.meta.env[key]
+            if (
+              key === 'assistantTemperature' ||
+              key === 'assistantTopP' ||
+              key === 'MAX_HISTORY_MESSAGES_FOR_API' ||
+              key === 'SUMMARIZATION_MESSAGE_COUNT'
+            ) {
+              ;(devCombinedSettings as any)[key] = parseFloat(
+                envValue as string
+              )
+            } else if (
+              key === 'assistantTools' &&
+              typeof envValue === 'string'
+            ) {
+              ;(devCombinedSettings as any)[key] = envValue
+                .split(',')
+                .map(t => t.trim())
+                .filter(Boolean)
+            } else {
+              ;(devCombinedSettings as any)[key] = envValue
+            }
+          }
+        }
+        try {
+          const result = validateAndFixSettings(devCombinedSettings)
+          settings.value = result.settings
+
+          if (result.migrated && window.settingsAPI) {
+            console.log('💾 Automatically saving migrated dev settings to file')
+            await saveSettingsToFile()
+          }
+
+          await ensureOnboardingStateConsistency()
+        } catch (error) {
+          console.error(
+            '[SettingsStore] Settings validation failed, using unvalidated settings:',
+            error
+          )
+          settings.value = devCombinedSettings as AliceSettings
+        }
+      }
+
+      if (hasMinimumConfigForOnboarding(config.value as AliceSettings)) {
+        try {
+          const conversationStore = useConversationStore()
+          await conversationStore.fetchModels()
+          coreOpenAISettingsValid.value = true
+        } catch (e: any) {
+          console.warn(
+            `[SettingsStore] Provider model validation failed on load: ${e.message}`
+          )
+          coreOpenAISettingsValid.value = false
+        }
+      }
     } catch (e: any) {
       error.value = `Failed to load settings: ${e.message}`
       settings.value = { ...defaultSettings }
+      coreOpenAISettingsValid.value = false
     } finally {
       isLoading.value = false
     }
   }
 
-  function updateSetting(key: keyof AliceSettings, value: string | boolean | number | string[]) {
-    if (['assistantTemperature', 'assistantTopP', 'MAX_HISTORY_MESSAGES_FOR_API', 'SUMMARIZATION_MESSAGE_COUNT', 'websocketPort', 'ragTopK', 'ragMaxContextChars'].includes(key)) (settings.value as any)[key] = Number(value)
-    else if ((key === 'assistantTools' || key === 'ragPaths') && Array.isArray(value)) settings.value[key] = value as string[]
-    else (settings.value as any)[key] = value
+  async function ensureOnboardingStateConsistency() {
+    if (settings.value.onboardingCompleted) {
+      return
+    }
+
+    if (!hasMinimumConfigForOnboarding(settings.value)) {
+      return
+    }
+
+    settings.value.onboardingCompleted = true
+    try {
+      await saveSettingsToFile()
+    } catch (error) {
+      console.warn(
+        '[SettingsStore] Failed to persist onboarding completion state:',
+        error
+      )
+    }
+  }
+
+  function updateSetting(
+    key: keyof AliceSettings,
+    value: string | boolean | number | string[]
+  ) {
+    if (
+      key === 'assistantTemperature' ||
+      key === 'assistantTopP' ||
+      key === 'MAX_HISTORY_MESSAGES_FOR_API' ||
+      key === 'SUMMARIZATION_MESSAGE_COUNT' ||
+      key === 'websocketPort' ||
+      key === 'ragTopK' ||
+      key === 'ragMaxContextChars'
+    ) {
+      ;(settings.value as any)[key] = Number(value)
+    } else if (
+      (key === 'assistantTools' || key === 'ragPaths') &&
+      Array.isArray(value)
+    ) {
+      settings.value[key] = value as string[]
+    } else {
+      ;(settings.value as any)[key] = String(value)
+    }
+    if (key === 'sttProvider') {
+      settings.value[key] = value as 'openai' | 'groq' | 'google' | 'local'
+    }
     if (key === 'aiProvider') {
-      settings.value.aiProvider = value as AIProviderKey
+      settings.value[key] = value as AIProviderKey
       const providerDefaults = PROVIDER_CONFIGS[settings.value.aiProvider]
       if (providerDefaults) {
         settings.value.assistantModel = providerDefaults.defaultModel
         settings.value.SUMMARIZATION_MODEL = providerDefaults.defaultModel
       }
     }
+    if (key === 'assistantReasoningEffort') {
+      settings.value[key] = value as 'minimal' | 'low' | 'medium' | 'high'
+    }
+    if (key === 'assistantVerbosity') {
+      settings.value[key] = value as 'low' | 'medium' | 'high'
+    }
+    if (key === 'localSttModel') {
+      settings.value[key] = value as string
+    }
+    if (key === 'localSttLanguage') {
+      settings.value[key] = value as string
+    }
+    if (key === 'localSttEnabled') {
+      settings.value[key] = value as boolean
+    }
+    if (key === 'ragEnabled') {
+      settings.value[key] = value as boolean
+    }
+    if (key === 'ttsProvider') {
+      settings.value[key] = value as 'openai' | 'google' | 'local'
+    }
+    if (key === 'localTtsVoice') {
+      settings.value[key] = value as string
+    }
+    if (key === 'googleTtsVoice') {
+      settings.value[key] = value as string
+    }
+    if (key === 'embeddingProvider') {
+      settings.value[key] = value as 'openai' | 'local'
+    }
+
     successMessage.value = null
     error.value = null
-  }
-
-  async function saveAndTestSettings() {
-    const generalStore = useGeneralStore()
-    const conversationStore = useConversationStore()
-    const saved = await saveSettingsToFile()
-    if (!saved) return
-    reinitializeClients()
-    try {
-      await conversationStore.fetchModels()
-      coreOpenAISettingsValid.value = true
-      generalStore.statusMessage = 'Re-initializing Kiki with new settings...'
-      if (conversationStore.isInitialized) conversationStore.isInitialized = false
-      const initSuccess = await conversationStore.initialize()
-      if (initSuccess) {
-        successMessage.value = 'Settings are valid and saved! Kiki is ready.'
-        generalStore.setAudioState('IDLE')
-      } else {
-        error.value = 'Failed to re-initialize Kiki with new settings.'
-      }
-    } catch (e: any) {
-      error.value = `${getProviderDisplayName(settings.value.aiProvider)} connection test failed: ${e.message}`
+    if (
+      key === 'VITE_OPENAI_API_KEY' ||
+      key === 'VITE_OPENROUTER_API_KEY' ||
+      key === 'VITE_ZAI_API_KEY' ||
+      key === 'VITE_MINIMAX_API_KEY' ||
+      key === 'VITE_DEEPSEEK_API_KEY' ||
+      key === 'ollamaBaseUrl' ||
+      key === 'lmStudioBaseUrl' ||
+      key === 'zaiBaseUrl' ||
+      key === 'minimaxBaseUrl' ||
+      key === 'deepseekBaseUrl' ||
+      key === 'codexAuthConnected' ||
+      key === 'aiProvider'
+    ) {
       coreOpenAISettingsValid.value = false
+    }
+
+    if (
+      key === 'aiProvider' &&
+      settings.value.aiProvider !== 'openai' &&
+      !settings.value.VITE_OPENAI_API_KEY?.trim() &&
+      settings.value.embeddingProvider === 'openai'
+    ) {
+      settings.value.embeddingProvider = 'local'
+    }
+
+    if (
+      key === 'VITE_OPENAI_API_KEY' &&
+      !settings.value.VITE_OPENAI_API_KEY?.trim() &&
+      settings.value.aiProvider !== 'openai' &&
+      settings.value.embeddingProvider === 'openai'
+    ) {
+      settings.value.embeddingProvider = 'local'
     }
   }
 
-  async function completeOnboarding(onboardingData: any) {
-    settings.value = { ...settings.value, ...onboardingData }
-    if (onboardingData.summarizationModel) settings.value.SUMMARIZATION_MODEL = onboardingData.summarizationModel
+  async function saveSettingsToFile(): Promise<boolean> {
+    if (!isProduction.value && !window.settingsAPI?.saveSettings) {
+      successMessage.value =
+        'Settings updated (Dev Mode - Not saved to file unless IPC available)'
+      return true
+    }
+    isSaving.value = true
+    error.value = null
+    try {
+      const plainSettings: AliceSettings = {
+        VITE_OPENAI_API_KEY: settings.value.VITE_OPENAI_API_KEY,
+        VITE_OPENROUTER_API_KEY: settings.value.VITE_OPENROUTER_API_KEY,
+        VITE_ZAI_API_KEY: settings.value.VITE_ZAI_API_KEY,
+        VITE_MINIMAX_API_KEY: settings.value.VITE_MINIMAX_API_KEY,
+        VITE_DEEPSEEK_API_KEY: settings.value.VITE_DEEPSEEK_API_KEY,
+        VITE_GROQ_API_KEY: settings.value.VITE_GROQ_API_KEY,
+        VITE_GOOGLE_API_KEY: settings.value.VITE_GOOGLE_API_KEY,
+        sttProvider: settings.value.sttProvider,
+        aiProvider: settings.value.aiProvider,
+
+        localSttModel: settings.value.localSttModel,
+        localSttLanguage: settings.value.localSttLanguage,
+        localSttEnabled: settings.value.localSttEnabled,
+        localSttWakeWord: settings.value.localSttWakeWord,
+
+        ollamaBaseUrl: settings.value.ollamaBaseUrl,
+        lmStudioBaseUrl: settings.value.lmStudioBaseUrl,
+        zaiBaseUrl: settings.value.zaiBaseUrl,
+        minimaxBaseUrl: settings.value.minimaxBaseUrl,
+        deepseekBaseUrl: settings.value.deepseekBaseUrl,
+        codexAuthConnected: settings.value.codexAuthConnected,
+        codexAccountLabel: settings.value.codexAccountLabel,
+        assistantModel: settings.value.assistantModel,
+        assistantSystemPrompt: settings.value.assistantSystemPrompt,
+        assistantTemperature: settings.value.assistantTemperature,
+        assistantTopP: settings.value.assistantTopP,
+        assistantReasoningEffort: settings.value.assistantReasoningEffort,
+        assistantVerbosity: settings.value.assistantVerbosity,
+        assistantTools: Array.from(settings.value.assistantTools || []),
+        assistantAvatar: settings.value.assistantAvatar,
+        mcpServersConfig: settings.value.mcpServersConfig,
+        MAX_HISTORY_MESSAGES_FOR_API:
+          settings.value.MAX_HISTORY_MESSAGES_FOR_API,
+        SUMMARIZATION_MESSAGE_COUNT: settings.value.SUMMARIZATION_MESSAGE_COUNT,
+        SUMMARIZATION_MODEL: settings.value.SUMMARIZATION_MODEL,
+        SUMMARIZATION_SYSTEM_PROMPT: settings.value.SUMMARIZATION_SYSTEM_PROMPT,
+        ttsProvider: settings.value.ttsProvider,
+        ttsVoice: settings.value.ttsVoice,
+        googleTtsVoice: settings.value.googleTtsVoice,
+        localTtsVoice: settings.value.localTtsVoice,
+        embeddingProvider: settings.value.embeddingProvider,
+        ragEnabled: settings.value.ragEnabled,
+        ragPaths: Array.from(settings.value.ragPaths || []),
+        ragTopK: settings.value.ragTopK,
+        ragMaxContextChars: settings.value.ragMaxContextChars,
+        microphoneToggleHotkey: settings.value.microphoneToggleHotkey,
+        mutePlaybackHotkey: settings.value.mutePlaybackHotkey,
+        takeScreenshotHotkey: settings.value.takeScreenshotHotkey,
+        VITE_JACKETT_API_KEY: settings.value.VITE_JACKETT_API_KEY,
+        VITE_JACKETT_URL: settings.value.VITE_JACKETT_URL,
+        VITE_QB_URL: settings.value.VITE_QB_URL,
+        VITE_QB_USERNAME: settings.value.VITE_QB_USERNAME,
+        VITE_QB_PASSWORD: settings.value.VITE_QB_PASSWORD,
+        VITE_TAVILY_API_KEY: settings.value.VITE_TAVILY_API_KEY,
+        VITE_SEARXNG_URL: settings.value.VITE_SEARXNG_URL,
+        VITE_SEARXNG_API_KEY: settings.value.VITE_SEARXNG_API_KEY,
+        websocketPort: settings.value.websocketPort,
+        approvedCommands: Array.from(settings.value.approvedCommands || []),
+        onboardingCompleted: settings.value.onboardingCompleted,
+      }
+
+      const saveResult = await window.settingsAPI.saveSettings(plainSettings)
+
+      if (saveResult.success) {
+        isSaving.value = false
+        return true
+      } else {
+        error.value = `Failed to save settings to file: ${saveResult.error || 'Unknown error'}`
+        console.error(
+          '[SettingsStore saveSettingsToFile] IPC save failed:',
+          saveResult.error
+        )
+        isSaving.value = false
+        return false
+      }
+    } catch (e: any) {
+      error.value = `Error during settings save: ${e.message}`
+      console.error(
+        '[SettingsStore saveSettingsToFile] Exception during save:',
+        e
+      )
+      isSaving.value = false
+      return false
+    }
+  }
+
+  async function saveAndTestSettings() {
+    isSaving.value = true
+    error.value = null
+    successMessage.value = null
+    const generalStore = useGeneralStore()
+    const conversationStore = useConversationStore()
+
+    const currentConfigForTest = config.value
+
+    if (
+      requiresOpenAIKey(currentConfigForTest) &&
+      !currentConfigForTest.VITE_OPENAI_API_KEY?.trim()
+    ) {
+      error.value = `Essential setting '${settingKeyToLabelMap.VITE_OPENAI_API_KEY}' is missing.`
+      generalStore.statusMessage = 'OpenAI API Key is required.'
+      isSaving.value = false
+      return
+    }
+
+    if (currentConfigForTest.aiProvider === 'openrouter') {
+      if (!currentConfigForTest.VITE_OPENROUTER_API_KEY?.trim()) {
+        error.value = `Essential setting '${settingKeyToLabelMap.VITE_OPENROUTER_API_KEY}' is missing.`
+        generalStore.statusMessage = 'OpenRouter API Key is required.'
+        isSaving.value = false
+        return
+      }
+    } else if (currentConfigForTest.aiProvider === 'zai') {
+      if (!currentConfigForTest.VITE_ZAI_API_KEY?.trim()) {
+        error.value = `Essential setting '${settingKeyToLabelMap.VITE_ZAI_API_KEY}' is missing.`
+        generalStore.statusMessage = 'Z.ai API Key is required.'
+        isSaving.value = false
+        return
+      }
+      if (!currentConfigForTest.zaiBaseUrl?.trim()) {
+        error.value = `Essential setting '${settingKeyToLabelMap.zaiBaseUrl}' is missing.`
+        generalStore.statusMessage = 'Z.ai Base URL is required.'
+        isSaving.value = false
+        return
+      }
+    } else if (currentConfigForTest.aiProvider === 'minimax') {
+      if (!currentConfigForTest.VITE_MINIMAX_API_KEY?.trim()) {
+        error.value = `Essential setting '${settingKeyToLabelMap.VITE_MINIMAX_API_KEY}' is missing.`
+        generalStore.statusMessage = 'MiniMax API Key is required.'
+        isSaving.value = false
+        return
+      }
+      if (!currentConfigForTest.minimaxBaseUrl?.trim()) {
+        error.value = `Essential setting '${settingKeyToLabelMap.minimaxBaseUrl}' is missing.`
+        generalStore.statusMessage = 'MiniMax Base URL is required.'
+        isSaving.value = false
+        return
+      }
+    } else if (currentConfigForTest.aiProvider === 'deepseek') {
+      if (!currentConfigForTest.VITE_DEEPSEEK_API_KEY?.trim()) {
+        error.value = `Essential setting '${settingKeyToLabelMap.VITE_DEEPSEEK_API_KEY}' is missing.`
+        generalStore.statusMessage = 'DeepSeek API Key is required.'
+        isSaving.value = false
+        return
+      }
+      if (!currentConfigForTest.deepseekBaseUrl?.trim()) {
+        error.value = `Essential setting '${settingKeyToLabelMap.deepseekBaseUrl}' is missing.`
+        generalStore.statusMessage = 'DeepSeek Base URL is required.'
+        isSaving.value = false
+        return
+      }
+    } else if (currentConfigForTest.aiProvider === 'codex') {
+      if (!currentConfigForTest.codexAuthConnected) {
+        error.value = `Essential setting '${settingKeyToLabelMap.codexAuthConnected}' is missing.`
+        generalStore.statusMessage = 'ChatGPT Codex authorization is required.'
+        isSaving.value = false
+        return
+      }
+    } else if (currentConfigForTest.aiProvider === 'ollama') {
+      if (!currentConfigForTest.ollamaBaseUrl?.trim()) {
+        error.value = `Essential setting '${settingKeyToLabelMap.ollamaBaseUrl}' is missing.`
+        generalStore.statusMessage = 'Ollama Base URL is required.'
+        isSaving.value = false
+        return
+      }
+    } else if (currentConfigForTest.aiProvider === 'lm-studio') {
+      if (!currentConfigForTest.lmStudioBaseUrl?.trim()) {
+        error.value = `Essential setting '${settingKeyToLabelMap.lmStudioBaseUrl}' is missing.`
+        generalStore.statusMessage = 'LM Studio Base URL is required.'
+        isSaving.value = false
+        return
+      }
+    }
+
+    if (
+      currentConfigForTest.sttProvider === 'groq' &&
+      !currentConfigForTest.VITE_GROQ_API_KEY?.trim()
+    ) {
+      error.value = `Groq STT is selected, but '${settingKeyToLabelMap.VITE_GROQ_API_KEY}' is missing.`
+      generalStore.statusMessage = 'Groq API Key is required for Groq STT.'
+      isSaving.value = false
+      return
+    }
+
+    if (
+      (currentConfigForTest.sttProvider === 'google' ||
+        currentConfigForTest.ttsProvider === 'google') &&
+      !currentConfigForTest.VITE_GOOGLE_API_KEY?.trim()
+    ) {
+      error.value = `Google is selected, but '${settingKeyToLabelMap.VITE_GOOGLE_API_KEY}' is missing.`
+      generalStore.statusMessage =
+        'Google API Key is required for Google services.'
+      isSaving.value = false
+      return
+    }
+
+    const settingsPersistedInitially = await saveSettingsToFile()
+    if (!settingsPersistedInitially) {
+      generalStore.statusMessage = 'Error saving settings to file.'
+      return
+    }
+
+    reinitializeClients()
+
+    let providerServiceTestSuccess = false
+    try {
+      await conversationStore.fetchModels()
+      providerServiceTestSuccess = true
+      coreOpenAISettingsValid.value = true
+    } catch (e: any) {
+      const providerName = getProviderDisplayName(
+        currentConfigForTest.aiProvider
+      )
+      error.value = `${providerName} connection test failed: ${e.message}. Check your ${providerName} configuration.`
+      coreOpenAISettingsValid.value = false
+      providerServiceTestSuccess = false
+    }
+
+    if (providerServiceTestSuccess) {
+      if (!currentConfigForTest.assistantModel?.trim()) {
+        const providerName = getProviderDisplayName(
+          currentConfigForTest.aiProvider
+        )
+        error.value = `${providerName} connection is valid. Please select an '${settingKeyToLabelMap.assistantModel}'.`
+        generalStore.statusMessage = 'Assistant model not selected.'
+        successMessage.value = `${providerName} connection is valid. Models loaded. Please complete model selections.`
+        isSaving.value = false
+        return
+      }
+      if (!currentConfigForTest.SUMMARIZATION_MODEL?.trim()) {
+        const providerName = getProviderDisplayName(
+          currentConfigForTest.aiProvider
+        )
+        error.value = `${providerName} connection is valid. Please select a '${settingKeyToLabelMap.SUMMARIZATION_MODEL}'.`
+        generalStore.statusMessage = 'Summarization model not selected.'
+        successMessage.value = `${providerName} connection is valid. Models loaded. Please complete model selections.`
+        isSaving.value = false
+        return
+      }
+
+      successMessage.value = 'Settings are valid and saved!'
+      if (!isProduction.value) {
+        successMessage.value +=
+          ' (Dev mode - .env might override for operation if not using UI for all settings)'
+      }
+      generalStore.statusMessage = 'Re-initializing Kiki with new settings...'
+
+      if (conversationStore.isInitialized) {
+        conversationStore.isInitialized = false
+      }
+      const initSuccess = await conversationStore.initialize()
+      if (initSuccess) {
+        successMessage.value += ' Kiki is ready.'
+        generalStore.setAudioState('IDLE')
+      } else {
+        const initErrorMsg = generalStore.statusMessage.includes('Error:')
+          ? generalStore.statusMessage
+          : 'Failed to re-initialize Kiki with new settings.'
+        error.value = (error.value ? error.value + '; ' : '') + initErrorMsg
+        successMessage.value = `Settings valid, but ${initErrorMsg}`
+      }
+    } else {
+      generalStore.statusMessage =
+        'Settings validation failed. Check provider configuration.'
+    }
+    isSaving.value = false
+    setTimeout(() => {
+      successMessage.value = null
+    }, 5000)
+  }
+
+  async function completeOnboarding(onboardingData: {
+    VITE_OPENAI_API_KEY: string
+    VITE_OPENROUTER_API_KEY: string
+    VITE_ZAI_API_KEY?: string
+    VITE_MINIMAX_API_KEY?: string
+    VITE_DEEPSEEK_API_KEY?: string
+    sttProvider: 'openai' | 'groq' | 'google' | 'local'
+    ttsProvider?: 'openai' | 'google' | 'local'
+    embeddingProvider?: 'openai' | 'local'
+    aiProvider: AIProviderKey
+    assistantModel?: string
+    summarizationModel?: string
+    VITE_GROQ_API_KEY: string
+    VITE_GOOGLE_API_KEY: string
+    ollamaBaseUrl?: string
+    lmStudioBaseUrl?: string
+    zaiBaseUrl?: string
+    minimaxBaseUrl?: string
+    deepseekBaseUrl?: string
+    useLocalModels?: boolean
+    localSttLanguage?: string
+  }) {
+    settings.value.VITE_OPENAI_API_KEY = onboardingData.VITE_OPENAI_API_KEY
+    settings.value.VITE_OPENROUTER_API_KEY =
+      onboardingData.VITE_OPENROUTER_API_KEY
+    settings.value.VITE_ZAI_API_KEY = onboardingData.VITE_ZAI_API_KEY || ''
+    settings.value.VITE_MINIMAX_API_KEY =
+      onboardingData.VITE_MINIMAX_API_KEY || ''
+    settings.value.VITE_DEEPSEEK_API_KEY =
+      onboardingData.VITE_DEEPSEEK_API_KEY || ''
+    settings.value.sttProvider = onboardingData.sttProvider
+    settings.value.aiProvider = onboardingData.aiProvider
+    settings.value.VITE_GROQ_API_KEY = onboardingData.VITE_GROQ_API_KEY
+    settings.value.VITE_GOOGLE_API_KEY = onboardingData.VITE_GOOGLE_API_KEY
+
+    if (onboardingData.assistantModel) {
+      settings.value.assistantModel = onboardingData.assistantModel
+    }
+    if (onboardingData.summarizationModel) {
+      settings.value.SUMMARIZATION_MODEL = onboardingData.summarizationModel
+    }
+
+    if (onboardingData.localSttLanguage) {
+      settings.value.localSttLanguage = onboardingData.localSttLanguage
+    }
+
     if (onboardingData.useLocalModels) {
       settings.value.sttProvider = 'local'
       settings.value.ttsProvider = 'local'
       settings.value.embeddingProvider = 'local'
       settings.value.localSttEnabled = true
       settings.value.localSttWakeWord = 'kiki'
+    } else {
+      settings.value.ttsProvider = onboardingData.ttsProvider || 'openai'
+      settings.value.embeddingProvider =
+        onboardingData.embeddingProvider || 'openai'
     }
+
+    if (onboardingData.ollamaBaseUrl) {
+      settings.value.ollamaBaseUrl = onboardingData.ollamaBaseUrl
+    }
+    if (onboardingData.lmStudioBaseUrl) {
+      settings.value.lmStudioBaseUrl = onboardingData.lmStudioBaseUrl
+    }
+    if (onboardingData.zaiBaseUrl) {
+      settings.value.zaiBaseUrl = onboardingData.zaiBaseUrl
+    }
+    if (onboardingData.minimaxBaseUrl) {
+      settings.value.minimaxBaseUrl = onboardingData.minimaxBaseUrl
+    }
+    if (onboardingData.deepseekBaseUrl) {
+      settings.value.deepseekBaseUrl = onboardingData.deepseekBaseUrl
+    }
+
     settings.value.onboardingCompleted = true
+
     const success = await saveSettingsToFile()
     if (success) {
       reinitializeClients()
-      await useConversationStore().initialize()
+      const conversationStore = useConversationStore()
+      await conversationStore.initialize()
+      isSaving.value = false
     }
     return success
   }
@@ -465,17 +1216,25 @@ export const useSettingsStore = defineStore('settings', () => {
     const commandName = command.split(' ')[0]
     if (!settings.value.approvedCommands.includes(commandName)) {
       settings.value.approvedCommands.push(commandName)
-      void saveSettingsToFile()
+      saveSettingsToFile()
     }
   }
+
   function addSessionApprovedCommand(command: string) {
     const commandName = command.split(' ')[0]
-    if (!sessionApprovedCommands.value.includes(commandName)) sessionApprovedCommands.value.push(commandName)
+    if (!sessionApprovedCommands.value.includes(commandName)) {
+      sessionApprovedCommands.value.push(commandName)
+    }
   }
+
   function isCommandApproved(command: string): boolean {
     const commandName = command.split(' ')[0]
-    return settings.value.approvedCommands.includes(commandName) || sessionApprovedCommands.value.includes(commandName)
+    return (
+      settings.value.approvedCommands.includes(commandName) ||
+      sessionApprovedCommands.value.includes(commandName)
+    )
   }
+
   async function removeApprovedCommand(command: string) {
     const commandName = command.split(' ')[0]
     const index = settings.value.approvedCommands.indexOf(commandName)
