@@ -148,13 +148,13 @@ const defaultSettings: AliceSettings = {
   VITE_DEEPSEEK_API_KEY: '',
   VITE_GROQ_API_KEY: '',
   VITE_GOOGLE_API_KEY: '',
-  sttProvider: 'openai',
-  aiProvider: 'openai',
+  sttProvider: 'local',
+  aiProvider: 'ollama',
 
   localSttModel: 'whisper-base',
   localSttLanguage: 'auto',
-  localSttEnabled: false,
-  localSttWakeWord: 'alice',
+  localSttEnabled: true,
+  localSttWakeWord: 'kiki',
 
   ollamaBaseUrl: 'http://localhost:11434',
   lmStudioBaseUrl: 'http://localhost:1234',
@@ -164,7 +164,7 @@ const defaultSettings: AliceSettings = {
   codexAuthConnected: false,
   codexAccountLabel: '',
 
-  assistantModel: 'gpt-4.1-mini',
+  assistantModel: PROVIDER_CONFIGS.ollama.defaultModel,
   assistantSystemPrompt: DEFAULT_PERSONA_PROMPT,
   assistantTemperature: 0.7,
   assistantTopP: 1.0,
@@ -172,7 +172,12 @@ const defaultSettings: AliceSettings = {
   assistantVerbosity: 'medium',
   assistantTools: [
     'get_current_datetime',
-    'perform_web_search',
+    'open_path',
+    'manage_clipboard',
+    'list_directory',
+    'execute_command',
+    'schedule_task',
+    'manage_scheduled_tasks',
     'save_memory',
     'delete_memory',
     'recall_memories',
@@ -181,13 +186,13 @@ const defaultSettings: AliceSettings = {
   mcpServersConfig: '[]',
   MAX_HISTORY_MESSAGES_FOR_API: 10,
   SUMMARIZATION_MESSAGE_COUNT: 20,
-  SUMMARIZATION_MODEL: 'gpt-5.6-luna',
+  SUMMARIZATION_MODEL: PROVIDER_CONFIGS.ollama.defaultModel,
   SUMMARIZATION_SYSTEM_PROMPT: DEFAULT_SUMMARIZATION_SYSTEM_PROMPT,
-  ttsProvider: 'openai',
+  ttsProvider: 'local',
   ttsVoice: 'nova',
   googleTtsVoice: 'en-US-Journey-F',
   localTtsVoice: 'en_US-amy-medium',
-  embeddingProvider: 'openai',
+  embeddingProvider: 'local',
   ragEnabled: false,
   ragPaths: [],
   ragTopK: 5,
@@ -225,7 +230,6 @@ const settingKeyToLabelMap: Record<keyof AliceSettings, string> = {
   sttProvider: 'Speech-to-Text Provider',
   aiProvider: 'AI Provider',
 
-  // Local Go Backend STT labels
   localSttModel: 'Local STT Model',
   localSttLanguage: 'Language',
   localSttEnabled: 'Enable Wake Word',
@@ -266,7 +270,7 @@ const settingKeyToLabelMap: Record<keyof AliceSettings, string> = {
 
   VITE_JACKETT_API_KEY: 'Jackett API Key (Torrents)',
   VITE_JACKETT_URL: 'Jackett URL (Torrents)',
-  VITE_QB_URL: 'qBittorrent URL',
+  VITE_QB_URL: 'qBittorrent URL (Torrents)',
   VITE_QB_USERNAME: 'qBittorrent Username',
   VITE_QB_PASSWORD: 'qBittorrent Password',
 
@@ -314,7 +318,6 @@ export const useSettingsStore = defineStore('settings', () => {
     const validated = { ...defaultSettings, ...loadedSettings }
     let migrated = false
 
-    // Migration: Handle old 'transformers' provider
     if ((validated.sttProvider as any) === 'transformers') {
       console.log(
         '🔄 Migrating settings: Converting old "transformers" provider to "local" (Go backend)'
@@ -322,7 +325,6 @@ export const useSettingsStore = defineStore('settings', () => {
       validated.sttProvider = 'local'
       migrated = true
 
-      // Migrate old transformers settings to new local settings
       if ((loadedSettings as any).transformersModel) {
         validated.localSttModel = (loadedSettings as any).transformersModel
         console.log(`📝 Migrated STT model: ${validated.localSttModel}`)
@@ -350,7 +352,8 @@ export const useSettingsStore = defineStore('settings', () => {
 
     const validSTTProviders = ['openai', 'groq', 'google', 'local'] as const
     if (!validSTTProviders.includes(validated.sttProvider as any)) {
-      validated.sttProvider = 'openai'
+      validated.sttProvider = 'local'
+      migrated = true
     }
 
     const validAIProviders = [
@@ -364,7 +367,8 @@ export const useSettingsStore = defineStore('settings', () => {
       'codex',
     ] as const
     if (!validAIProviders.includes(validated.aiProvider as any)) {
-      validated.aiProvider = 'openai'
+      validated.aiProvider = 'ollama'
+      migrated = true
     }
 
     const safeAssistantModel = getSafeProviderModel(
@@ -391,6 +395,11 @@ export const useSettingsStore = defineStore('settings', () => {
       validated.embeddingProvider === 'openai'
     ) {
       validated.embeddingProvider = 'local'
+      migrated = true
+    }
+
+    if (!loadedSettings.localSttWakeWord || validated.localSttWakeWord === 'alice') {
+      validated.localSttWakeWord = 'kiki'
       migrated = true
     }
 
@@ -421,7 +430,8 @@ export const useSettingsStore = defineStore('settings', () => {
         'whisper-large',
       ]
       if (!validModelIds.includes(validated.localSttModel)) {
-        validated.localSttModel = validModelIds[1] || 'whisper-base'
+        validated.localSttModel = 'whisper-base'
+        migrated = true
       }
     }
 
@@ -437,7 +447,6 @@ export const useSettingsStore = defineStore('settings', () => {
       'SUMMARIZATION_MODEL',
     ]
 
-    // API keys requirements based on provider
     if (settings.value.aiProvider === 'openai') {
       essentialKeys.push('VITE_OPENAI_API_KEY')
     } else if (settings.value.aiProvider === 'openrouter') {
@@ -479,6 +488,7 @@ export const useSettingsStore = defineStore('settings', () => {
       const value = settings.value[key]
       if (typeof value === 'string') return !!value.trim()
       if (typeof value === 'number') return true
+      if (typeof value === 'boolean') return value
       if (Array.isArray(value)) return true
       return false
     })
@@ -611,7 +621,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
           if (
             !settings.value.onboardingCompleted &&
-            settings.value.VITE_OPENAI_API_KEY?.trim()
+            hasMinimumConfigForOnboarding(settings.value)
           ) {
             settings.value.onboardingCompleted = true
             needsSave = true
@@ -636,7 +646,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
             if (
               !devCombinedSettings.onboardingCompleted &&
-              (loadedDevSettings as any).VITE_OPENAI_API_KEY?.trim()
+              hasMinimumConfigForOnboarding(devCombinedSettings)
             ) {
               devCombinedSettings.onboardingCompleted = true
             }
@@ -692,14 +702,14 @@ export const useSettingsStore = defineStore('settings', () => {
         }
       }
 
-      if (config.value.VITE_OPENAI_API_KEY) {
+      if (hasMinimumConfigForOnboarding(config.value as AliceSettings)) {
         try {
           const conversationStore = useConversationStore()
           await conversationStore.fetchModels()
           coreOpenAISettingsValid.value = true
         } catch (e: any) {
           console.warn(
-            `[SettingsStore] Core OpenAI API key validation failed on load: ${e.message}`
+            `[SettingsStore] Provider model validation failed on load: ${e.message}`
           )
           coreOpenAISettingsValid.value = false
         }
@@ -760,21 +770,10 @@ export const useSettingsStore = defineStore('settings', () => {
     }
     if (key === 'aiProvider') {
       settings.value[key] = value as AIProviderKey
-      if (settings.value.aiProvider === 'zai') {
-        settings.value.assistantModel = PROVIDER_CONFIGS.zai.defaultModel
-        settings.value.SUMMARIZATION_MODEL = PROVIDER_CONFIGS.zai.defaultModel
-      } else if (settings.value.aiProvider === 'minimax') {
-        settings.value.assistantModel = PROVIDER_CONFIGS.minimax.defaultModel
-        settings.value.SUMMARIZATION_MODEL =
-          PROVIDER_CONFIGS.minimax.defaultModel
-      } else if (settings.value.aiProvider === 'deepseek') {
-        settings.value.assistantModel = PROVIDER_CONFIGS.deepseek.defaultModel
-        settings.value.SUMMARIZATION_MODEL =
-          PROVIDER_CONFIGS.deepseek.defaultModel
-      } else if (settings.value.aiProvider === 'codex') {
-        settings.value.assistantModel = PROVIDER_CONFIGS.codex.defaultModel
-        settings.value.SUMMARIZATION_MODEL =
-          PROVIDER_CONFIGS.codex.defaultModel
+      const providerDefaults = PROVIDER_CONFIGS[settings.value.aiProvider]
+      if (providerDefaults) {
+        settings.value.assistantModel = providerDefaults.defaultModel
+        settings.value.SUMMARIZATION_MODEL = providerDefaults.defaultModel
       }
     }
     if (key === 'assistantReasoningEffort') {
@@ -1060,21 +1059,21 @@ export const useSettingsStore = defineStore('settings', () => {
 
     reinitializeClients()
 
-    let openAIServiceTestSuccess = false
+    let providerServiceTestSuccess = false
     try {
       await conversationStore.fetchModels()
-      openAIServiceTestSuccess = true
+      providerServiceTestSuccess = true
       coreOpenAISettingsValid.value = true
     } catch (e: any) {
       const providerName = getProviderDisplayName(
         currentConfigForTest.aiProvider
       )
-      error.value = `${providerName} API connection test failed: ${e.message}. Check your ${providerName} configuration.`
+      error.value = `${providerName} connection test failed: ${e.message}. Check your ${providerName} configuration.`
       coreOpenAISettingsValid.value = false
-      openAIServiceTestSuccess = false
+      providerServiceTestSuccess = false
     }
 
-    if (openAIServiceTestSuccess) {
+    if (providerServiceTestSuccess) {
       if (!currentConfigForTest.assistantModel?.trim()) {
         const providerName = getProviderDisplayName(
           currentConfigForTest.aiProvider
@@ -1101,25 +1100,25 @@ export const useSettingsStore = defineStore('settings', () => {
         successMessage.value +=
           ' (Dev mode - .env might override for operation if not using UI for all settings)'
       }
-      generalStore.statusMessage = 'Re-initializing Alice with new settings...'
+      generalStore.statusMessage = 'Re-initializing Kiki with new settings...'
 
       if (conversationStore.isInitialized) {
         conversationStore.isInitialized = false
       }
       const initSuccess = await conversationStore.initialize()
       if (initSuccess) {
-        successMessage.value += ' Alice is ready.'
+        successMessage.value += ' Kiki is ready.'
         generalStore.setAudioState('IDLE')
       } else {
         const initErrorMsg = generalStore.statusMessage.includes('Error:')
           ? generalStore.statusMessage
-          : 'Failed to re-initialize Alice with new settings.'
+          : 'Failed to re-initialize Kiki with new settings.'
         error.value = (error.value ? error.value + '; ' : '') + initErrorMsg
         successMessage.value = `Settings valid, but ${initErrorMsg}`
       }
     } else {
       generalStore.statusMessage =
-        'Settings validation failed. Check API Key(s).'
+        'Settings validation failed. Check provider configuration.'
     }
     isSaving.value = false
     setTimeout(() => {
@@ -1162,7 +1161,6 @@ export const useSettingsStore = defineStore('settings', () => {
     settings.value.VITE_GROQ_API_KEY = onboardingData.VITE_GROQ_API_KEY
     settings.value.VITE_GOOGLE_API_KEY = onboardingData.VITE_GOOGLE_API_KEY
 
-    // Set models if provided
     if (onboardingData.assistantModel) {
       settings.value.assistantModel = onboardingData.assistantModel
     }
@@ -1174,12 +1172,13 @@ export const useSettingsStore = defineStore('settings', () => {
       settings.value.localSttLanguage = onboardingData.localSttLanguage
     }
 
-    // Set TTS and embedding providers based on local models preference
     if (onboardingData.useLocalModels) {
+      settings.value.sttProvider = 'local'
       settings.value.ttsProvider = 'local'
       settings.value.embeddingProvider = 'local'
+      settings.value.localSttEnabled = true
+      settings.value.localSttWakeWord = 'kiki'
     } else {
-      // Respect the user's choice from the wizard if available, otherwise default to openai
       settings.value.ttsProvider = onboardingData.ttsProvider || 'openai'
       settings.value.embeddingProvider =
         onboardingData.embeddingProvider || 'openai'
