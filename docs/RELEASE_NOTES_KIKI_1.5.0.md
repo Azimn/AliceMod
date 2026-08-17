@@ -1,6 +1,14 @@
 # Kiki 1.5.0 Release Candidate Notes
 
-Kiki 1.5.0 is the first AliceMod release candidate focused on a local-first desktop assistant experience.
+Kiki 1.5.0 is the first AliceMod release candidate focused on a local-first desktop assistant experience and on implementing Kiki as an established character rather than a generic renamed assistant.
+
+## Character implementation
+
+The default persona now encodes Kiki's stable identity rather than a generic warm-and-witty assistant description. Her late-1980s/1990s valley-girl social voice, expressive personality, casual technical brilliance, period-limited personal voice, continuity, and practical assistant competence are treated as character invariants.
+
+`docs/KIKI_CHARACTER.md` records these invariants independently of any particular language model. The implementation rule is to degrade capability before identity when the runtime changes.
+
+A fresh Kiki profile loads this canonical prompt by default. Existing customized persona prompts are intentionally not overwritten automatically.
 
 ## Local-first defaults
 
@@ -28,11 +36,24 @@ Regression tests cover the local TTS and embedding boundaries, plus strict Piper
 
 ## Voice path
 
-The local Whisper model setting is now connected to actual backend model selection. Supported IDs are Tiny English, Base, Small, Medium, and Large, with Large mapped to whisper.cpp Large v3.
+The local Whisper model setting is connected to actual backend model selection. Supported IDs are Tiny English, Base, Small, Medium, and Large, with Large mapped to whisper.cpp Large v3.
 
 Model identifiers are allowlisted by the Go backend. Missing selected models are downloaded on first use.
 
-Wake handling now uses two stages. VAD segments an utterance, then a lightweight local Whisper probe checks for the wake word using raw PCM samples. The configured full Whisper model runs only after Kiki is addressed. This reduces unnecessary full-model transcription of ambient speech while keeping the architecture ready for a future dedicated acoustic wake-word engine.
+Wake handling uses two stages. VAD segments an utterance, then a lightweight local Whisper probe checks for the wake word using raw PCM samples. The configured full Whisper model runs only after Kiki is addressed. This reduces unnecessary full-model transcription of ambient speech while keeping the architecture ready for a future dedicated acoustic wake-word engine.
+
+## Windows runtime integrity
+
+The normal Windows x64 backend build now prepares critical speech runtime files before the inherited build helper runs.
+
+- Whisper is pinned to the official whisper.cpp v1.9.2 x64 release archive and verified with its published SHA-256 digest.
+- FFmpeg is pinned to a specific BtbN Windows x64 build and verified with its published SHA-256 digest.
+- The default `ggml-base.bin` Whisper model is pinned to a specific Hugging Face repository revision and verified against the upstream project's published Base-model SHA-1 value.
+- A digest mismatch stops the preparation step rather than extracting or packaging unverified bytes.
+
+The local embedding setup was already pinned: ONNX Runtime archives, the multilingual E5 ONNX model, and tokenizer are verified against fixed SHA-256 values and the E5 artifacts use a fixed Hugging Face revision.
+
+Piper remains sourced from the pinned rhasspy Piper release used by the inherited project. That older GitHub release does not expose a release-asset digest through the current metadata API, so real runtime readiness and functional synthesis are still verified during build/install testing.
 
 ## Desktop tools and permissions
 
@@ -46,21 +67,21 @@ The audit identified an inherited scheduler flaw: scheduled command tasks can ex
 
 The packaged product is named Kiki and release artifacts use Kiki filenames for Windows, macOS, and Linux.
 
-The Electron update feed now points to `Azimn/AliceMod`. It no longer points to upstream `pmbstyle/Alice`, preventing an upstream Alice release from replacing the fork through automatic update.
+The Electron update feed points to `Azimn/AliceMod`. It no longer points to upstream `pmbstyle/Alice`, preventing an upstream Alice release from replacing the fork through automatic update.
 
 The existing `aliceaiapp` application ID is intentionally retained for compatibility and user-data continuity.
 
 ## Validation improvements
 
-Both PR builds and tagged release builds now run the Go test suite with `go test ./...` in addition to the frontend Vitest suite. Tagged releases use `npm ci` for lockfile-reproducible dependency installation.
+Both PR builds and tagged release builds run the Go test suite with `go test ./...` in addition to the frontend Vitest suite. Tagged releases use `npm ci` for lockfile-reproducible dependency installation.
 
 ## Known release-candidate limitations
 
-GitHub Actions must be enabled for the fork and the Windows, macOS, and Linux validation matrix must pass before this candidate should be published as a validated release.
+GitHub Actions must be enabled for the fork and the Windows, macOS, and Linux validation matrix must pass before this candidate should be called a validated public release.
 
-The build system still downloads some inherited runtime binaries from upstream-hosted or third-party locations. Those dependencies should be treated as external release infrastructure and verified during the three-platform build.
+For the intended local Windows installation, the next required validation is an actual clean build and smoke test on the target machine using the release checklist.
 
-Some internal names still contain Alice for compatibility, including `AliceSettings`, `alice-ai-app`, selected IPC/protocol identifiers, backend executable names, and the existing app ID. A small number of inherited visible Alice strings may also remain in large legacy settings/onboarding files pending build-validated cleanup.
+Some internal names still contain Alice for compatibility, including `AliceSettings`, `alice-ai-app`, selected IPC/protocol identifiers, backend executable names, and the existing app ID. Those names are not treated as product-identity defects for this local Kiki implementation.
 
 ## Upstream credit
 
