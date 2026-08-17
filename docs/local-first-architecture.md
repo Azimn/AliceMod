@@ -1,6 +1,8 @@
 # AliceMod Local-First Architecture
 
-AliceMod is being adapted so that a complete assistant experience can run without metered AI API usage. Cloud services remain optional capabilities, but they must never be required for the baseline assistant and they must never be invoked silently when the user has selected a local provider.
+AliceMod is being adapted so that a complete assistant experience can run without metered AI API usage. The user-facing assistant is Kiki. Compatibility-facing internal identifiers such as the `AliceSettings` TypeScript type, the `alice-ai-app` package name, IPC names, custom protocol names, and links to the real upstream `pmbstyle/Alice` repository may retain Alice naming when changing them provides no user benefit or would create migration risk.
+
+Cloud services remain optional capabilities, but they must never be required for the baseline assistant and they must never be invoked silently when the user has selected a local provider.
 
 ## Baseline execution path
 
