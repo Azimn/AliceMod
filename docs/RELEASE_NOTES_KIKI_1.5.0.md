@@ -22,7 +22,9 @@ A selected local provider no longer silently falls back to OpenAI simply because
 - Explicitly local embedding failures do not invoke OpenAI embeddings.
 - Google TTS failures do not silently switch to OpenAI TTS.
 
-Regression tests cover the local TTS and embedding boundaries.
+The Piper backend now distinguishes initialization from real runtime readiness. A missing Piper executable, missing required Windows DLL, non-executable Unix binary, missing voice model, or Piper synthesis failure is reported as an error. Kiki's TTS API no longer accepts the inherited generated placeholder WAV as successful local speech.
+
+Regression tests cover the local TTS and embedding boundaries, plus strict Piper runtime readiness.
 
 ## Voice path
 
@@ -30,7 +32,7 @@ The local Whisper model setting is now connected to actual backend model selecti
 
 Model identifiers are allowlisted by the Go backend. Missing selected models are downloaded on first use.
 
-Wake handling now uses two stages. VAD segments an utterance, then a lightweight local Whisper probe checks for the wake word. The configured full Whisper model runs only after Kiki is addressed. This reduces unnecessary full-model transcription of ambient speech while keeping the architecture ready for a future dedicated acoustic wake-word engine.
+Wake handling now uses two stages. VAD segments an utterance, then a lightweight local Whisper probe checks for the wake word using raw PCM samples. The configured full Whisper model runs only after Kiki is addressed. This reduces unnecessary full-model transcription of ambient speech while keeping the architecture ready for a future dedicated acoustic wake-word engine.
 
 ## Desktop tools and permissions
 
@@ -38,7 +40,7 @@ Kiki exposes practical local assistant capabilities including clipboard access, 
 
 Shell execution remains protected by a native Run once confirmation before the Electron main process invokes the command.
 
-The audit identified an inherited scheduler flaw: scheduled command tasks can execute later without passing through the shell-command confirmation dialog. As a release safety measure, `schedule_task` and `manage_scheduled_tasks` are filtered out of every model provider until the scheduler is redesigned or gains an equivalent approval boundary.
+The audit identified an inherited scheduler flaw: scheduled command tasks can execute later without passing through the shell-command confirmation dialog. As a release safety measure, `schedule_task` and `manage_scheduled_tasks` are removed from the predefined model tool catalog and independently filtered from every model provider until the scheduler is redesigned or gains an equivalent approval boundary.
 
 ## Packaging and updates
 
@@ -58,7 +60,7 @@ GitHub Actions must be enabled for the fork and the Windows, macOS, and Linux va
 
 The build system still downloads some inherited runtime binaries from upstream-hosted or third-party locations. Those dependencies should be treated as external release infrastructure and verified during the three-platform build.
 
-Some internal names still contain Alice for compatibility, including `AliceSettings`, `alice-ai-app`, selected IPC/protocol identifiers, backend executable names, and the existing app ID. Those are not user-facing product identity changes.
+Some internal names still contain Alice for compatibility, including `AliceSettings`, `alice-ai-app`, selected IPC/protocol identifiers, backend executable names, and the existing app ID. A small number of inherited visible Alice strings may also remain in large legacy settings/onboarding files pending build-validated cleanup.
 
 ## Upstream credit
 
