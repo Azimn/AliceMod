@@ -50,24 +50,17 @@ import type { AppChatMessageContentPart } from '../types/chat'
 import type { RagSearchResult } from '../types/rag'
 import type { EmbeddingInputType } from './backendApi'
 
-/**
- * Parse WAV file ArrayBuffer and extract raw PCM audio data as Float32Array
- */
 function parseWavToFloat32Array(arrayBuffer: ArrayBuffer): Float32Array {
   const dataView = new DataView(arrayBuffer)
 
-  // Verify WAV format
   if (dataView.getUint32(0, false) !== 0x52494646) {
-    // "RIFF"
     throw new Error('Invalid WAV file: missing RIFF header')
   }
 
   if (dataView.getUint32(8, false) !== 0x57415645) {
-    // "WAVE"
     throw new Error('Invalid WAV file: missing WAVE header')
   }
 
-  // Find data chunk
   let offset = 12
   let dataOffset = -1
   let dataSize = 0
@@ -77,7 +70,6 @@ function parseWavToFloat32Array(arrayBuffer: ArrayBuffer): Float32Array {
     const chunkSize = dataView.getUint32(offset + 4, true)
 
     if (chunkId === 0x64617461) {
-      // "data"
       dataOffset = offset + 8
       dataSize = chunkSize
       break
@@ -90,21 +82,15 @@ function parseWavToFloat32Array(arrayBuffer: ArrayBuffer): Float32Array {
     throw new Error('Invalid WAV file: data chunk not found')
   }
 
-  // Extract PCM data and convert to Float32
   const pcmData = new Int16Array(arrayBuffer, dataOffset, dataSize / 2)
   const float32Data = new Float32Array(pcmData.length)
 
-  // Convert 16-bit PCM to Float32 (-1.0 to 1.0 range)
   for (let i = 0; i < pcmData.length; i++) {
     float32Data[i] = pcmData[i] / 32768.0
   }
 
   return float32Data
 }
-
-/* 
-API Function Exports
-*/
 
 function getAIClient(): OpenAI {
   const settings = useSettingsStore().config
@@ -128,27 +114,13 @@ function getAIClient(): OpenAI {
 
 export const fetchOpenAIModels = async (): Promise<OpenAI.Models.Model[]> => {
   const settings = useSettingsStore().config
-  if (settings.aiProvider === 'openrouter') {
-    return listOpenRouterModels()
-  }
-  if (settings.aiProvider === 'ollama') {
-    return listOllamaModels()
-  }
-  if (settings.aiProvider === 'lm-studio') {
-    return listLMStudioModels()
-  }
-  if (settings.aiProvider === 'zai') {
-    return listZAIModels()
-  }
-  if (settings.aiProvider === 'minimax') {
-    return listMiniMaxModels()
-  }
-  if (settings.aiProvider === 'deepseek') {
-    return listDeepSeekModels()
-  }
-  if (settings.aiProvider === 'codex') {
-    return listCodexModels()
-  }
+  if (settings.aiProvider === 'openrouter') return listOpenRouterModels()
+  if (settings.aiProvider === 'ollama') return listOllamaModels()
+  if (settings.aiProvider === 'lm-studio') return listLMStudioModels()
+  if (settings.aiProvider === 'zai') return listZAIModels()
+  if (settings.aiProvider === 'minimax') return listMiniMaxModels()
+  if (settings.aiProvider === 'deepseek') return listDeepSeekModels()
+  if (settings.aiProvider === 'codex') return listCodexModels()
   return listOpenAIModels()
 }
 
@@ -310,7 +282,6 @@ const googleTTS = async (
     throw new Error('Google API Key is not configured')
   }
 
-  // Extract language code from voice name (e.g., "en-US-Journey-F" -> "en-US")
   const voiceName = settingsStore.config.googleTtsVoice || 'en-US-Journey-F'
   const languageCode = voiceName.split('-').slice(0, 2).join('-')
 
@@ -343,7 +314,6 @@ const googleTTS = async (
   }
 
   const data = await response.json()
-  // data.audioContent is base64 string
   const binaryString = atob(data.audioContent)
   const bytes = new Uint8Array(binaryString.length)
   for (let i = 0; i < binaryString.length; i++) {
@@ -353,7 +323,6 @@ const googleTTS = async (
   return new Response(blob)
 }
 
-// Helper function for OpenAI TTS (extracted from original function)
 const fallbackToOpenAITTS = async (
   text: string,
   signal: AbortSignal
@@ -372,7 +341,6 @@ const fallbackToOpenAITTS = async (
   )
 }
 
-// Helper to map ISO 639-1 language codes to BCP-47 for Google Cloud
 function mapLanguageToBCP47(isoCode: string): string {
   const mapping: Record<string, string> = {
     auto: 'en-US',
@@ -386,14 +354,14 @@ function mapLanguageToBCP47(isoCode: string): string {
     ru: 'ru-RU',
     ja: 'ja-JP',
     ko: 'ko-KR',
-    ar: 'ar-XA', // Google uses ar-XA for standard Arabic
+    ar: 'ar-XA',
     hi: 'hi-IN',
     tr: 'tr-TR',
     pl: 'pl-PL',
     nl: 'nl-NL',
     sv: 'sv-SE',
     da: 'da-DK',
-    no: 'nb-NO', // Google uses nb-NO for Norwegian Bokmål
+    no: 'nb-NO',
     fi: 'fi-FI',
     uk: 'uk-UA',
   }
@@ -441,13 +409,11 @@ export const transcribeWithGoogle = async (
     )
   }
 
-  // Convert ArrayBuffer to Base64 using FileReader (more efficient for large files)
   const base64Audio = await new Promise<string>((resolve, reject) => {
     const blob = new Blob([audioBuffer], { type: 'audio/wav' })
     const reader = new FileReader()
     reader.onloadend = () => {
       const result = reader.result as string
-      // result is like "data:audio/wav;base64,....."
       const base64 = result.split(',')[1]
       resolve(base64)
     }
@@ -468,7 +434,6 @@ export const transcribeWithGoogle = async (
       },
       body: JSON.stringify({
         config: {
-          // If we don't specify encoding, Google attempts to detect it from the header (WAV)
           languageCode: languageCode,
           model: 'latest_short',
         },
@@ -512,60 +477,52 @@ export const transcribeWithBackend = async (
   audioBuffer: ArrayBuffer,
   language?: string
 ): Promise<string> => {
-  try {
-    const settingsStore = useSettingsStore()
-    const selectedLanguage =
-      language || settingsStore.config.localSttLanguage || 'auto'
+  const settingsStore = useSettingsStore()
+  const selectedLanguage =
+    language || settingsStore.config.localSttLanguage || 'auto'
+  const selectedModel = settingsStore.config.localSttModel || 'whisper-base'
 
-    // Import the backend API
-    const { backendApi } = await import('./backendApi')
+  const { backendApi } = await import('./backendApi')
 
-    // Check if Go backend is ready
-    const isHealthy = await backendApi.isHealthy()
-    if (!isHealthy) {
-      throw new Error('Go backend not available - server not running')
-    }
-
-    const sttReady = await backendApi.isSTTReady()
-    if (!sttReady) {
-      throw new Error(
-        'Go STT service not ready - AI dependencies may not be installed'
-      )
-    }
-
-    // Parse WAV file to extract raw PCM audio data
-    const audioData = parseWavToFloat32Array(audioBuffer)
-
-    // Filter out null/NaN values and ensure valid number range
-    const cleanedAudioData = Array.from(audioData).filter(
-      value =>
-        value !== null &&
-        value !== undefined &&
-        !isNaN(value) &&
-        isFinite(value) &&
-        Math.abs(value) <= 1.5 // Allow slight headroom beyond -1.0 to 1.0 range
-    )
-
-    if (cleanedAudioData.length === 0) {
-      throw new Error('Audio data contains no valid samples')
-    }
-
-    // Skip very short audio clips
-    if (cleanedAudioData.length / 16000 < 0.5) {
-      throw new Error('Audio clip too short for reliable transcription')
-    }
-
-    const audioDataFloat32 = new Float32Array(cleanedAudioData)
-    const result = await backendApi.transcribeAudio(
-      audioDataFloat32,
-      16000,
-      selectedLanguage === 'auto' ? undefined : selectedLanguage
-    )
-
-    return result.text
-  } catch (error: any) {
-    throw error
+  const isHealthy = await backendApi.isHealthy()
+  if (!isHealthy) {
+    throw new Error('Go backend not available - server not running')
   }
+
+  const sttReady = await backendApi.isSTTReady()
+  if (!sttReady) {
+    throw new Error(
+      'Go STT service not ready - AI dependencies may not be installed'
+    )
+  }
+
+  const audioData = parseWavToFloat32Array(audioBuffer)
+  const cleanedAudioData = Array.from(audioData).filter(
+    value =>
+      value !== null &&
+      value !== undefined &&
+      !isNaN(value) &&
+      isFinite(value) &&
+      Math.abs(value) <= 1.5
+  )
+
+  if (cleanedAudioData.length === 0) {
+    throw new Error('Audio data contains no valid samples')
+  }
+
+  if (cleanedAudioData.length / 16000 < 0.5) {
+    throw new Error('Audio clip too short for reliable transcription')
+  }
+
+  const audioDataFloat32 = new Float32Array(cleanedAudioData)
+  const result = await backendApi.transcribeAudio(
+    audioDataFloat32,
+    16000,
+    selectedLanguage === 'auto' ? undefined : selectedLanguage,
+    selectedModel
+  )
+
+  return result.text
 }
 
 export const transcribeWithOpenAI = async (
