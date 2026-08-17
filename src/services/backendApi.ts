@@ -77,6 +77,7 @@ class BackendApiError extends Error {
 export class BackendApi {
   private client: AxiosInstance
   private baseUrl = 'http://127.0.0.1:8765'
+  private readonly modelOperationTimeout = 15 * 60 * 1000
 
   constructor() {
     this.client = axios.create({
@@ -169,7 +170,8 @@ export class BackendApi {
         sample_rate: sampleRate,
         language,
         model,
-      }
+      },
+      { timeout: this.modelOperationTimeout }
     )
 
     if (!response.data.success) {
@@ -200,6 +202,7 @@ export class BackendApi {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        timeout: this.modelOperationTimeout,
       }
     )
 
@@ -433,7 +436,7 @@ export class BackendApi {
       `/api/models/download/${service}`,
       {},
       {
-        timeout: 300000,
+        timeout: this.modelOperationTimeout,
       }
     )
 
