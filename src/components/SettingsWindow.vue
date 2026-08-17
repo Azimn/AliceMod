@@ -3,8 +3,8 @@
     <div class="title-bar flex items-center justify-between bg-gray-800 border-b border-gray-700 h-12 px-4 select-none"
          style="-webkit-app-region: drag;">
       <div class="flex items-center gap-3">
-        <img :src="appLogo" alt="Alice" class="w-6 h-6" />
-        <span class="font-medium text-sm">Alice Settings</span>
+        <img :src="appLogo" alt="Kiki" class="w-6 h-6" />
+        <span class="font-medium text-sm">Kiki Settings</span>
       </div>
       <button
         @click="closeWindow"
