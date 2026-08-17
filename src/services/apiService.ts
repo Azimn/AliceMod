@@ -258,13 +258,11 @@ export const ttsStream = async (
 
   if (settings.ttsProvider === 'local') {
     try {
-      // Import the backend API
       const { backendApi } = await import('./backendApi')
-
       const ttsReady = await backendApi.isTTSReady()
 
       if (!ttsReady) {
-        return fallbackToOpenAITTS(cleanedText, signal)
+        throw new Error('Local TTS service is not ready')
       }
 
       const speechResult = await backendApi.synthesizeSpeech(
@@ -272,11 +270,10 @@ export const ttsStream = async (
         settings.localTtsVoice
       )
 
-      if (!speechResult.audio) {
-        return fallbackToOpenAITTS(cleanedText, signal)
+      if (!speechResult.audio || speechResult.audio.length === 0) {
+        throw new Error('Local TTS returned no audio')
       }
 
-      // Convert number array to ArrayBuffer
       const audioBuffer = new ArrayBuffer(speechResult.audio.length)
       const audioView = new Uint8Array(audioBuffer)
       audioView.set(speechResult.audio)
@@ -291,15 +288,12 @@ export const ttsStream = async (
         },
       })
     } catch (error: any) {
-      return fallbackToOpenAITTS(cleanedText, signal)
+      const message = error?.message || String(error)
+      console.error('Local TTS failed without cloud fallback:', message)
+      throw new Error(`Local TTS failed: ${message}`)
     }
   } else if (settings.ttsProvider === 'google') {
-    try {
-      return await googleTTS(cleanedText, signal)
-    } catch (error) {
-      console.error('Google TTS failed, falling back to OpenAI:', error)
-      return fallbackToOpenAITTS(cleanedText, signal)
-    }
+    return googleTTS(cleanedText, signal)
   } else {
     return fallbackToOpenAITTS(cleanedText, signal)
   }
@@ -641,19 +635,22 @@ export const createEmbedding = async (
   if (!textToEmbed.trim()) return []
 
   const hasOpenAIKey = !!settings.VITE_OPENAI_API_KEY?.trim()
-  const shouldPreferLocal =
-    settings.embeddingProvider === 'local' ||
-    (!hasOpenAIKey && settings.aiProvider !== 'openai')
+  const explicitlyLocal = settings.embeddingProvider === 'local'
 
+  if (explicitlyLocal) {
+    try {
+      return await generateLocalEmbedding(textToEmbed, inputType)
+    } catch (error) {
+      return []
+    }
+  }
+
+  const shouldPreferLocal = !hasOpenAIKey && settings.aiProvider !== 'openai'
   if (shouldPreferLocal) {
     try {
-      const embedding = await generateLocalEmbedding(textToEmbed, inputType)
-      if (embedding && embedding.length > 0) {
-        return embedding
-      }
-      return hasOpenAIKey ? fallbackToOpenAIEmbedding(textToEmbed) : []
+      return await generateLocalEmbedding(textToEmbed, inputType)
     } catch (error) {
-      return hasOpenAIKey ? fallbackToOpenAIEmbedding(textToEmbed) : []
+      return []
     }
   }
 
