@@ -16,13 +16,15 @@ The TTS and embedding paths now enforce this boundary. When local Piper is selec
 
 ## Voice architecture
 
-The existing microphone path uses VAD to segment speech and then performs full STT before checking the configured wake word. This provides functional wake-word gating, but it is not a dedicated low-cost wake-word detector. For an ambient Windows assistant, the long-term architecture should separate inexpensive wake detection from full utterance transcription so that idle listening does not repeatedly invoke Whisper.
+The microphone path uses VAD to segment speech. When local wake-word mode is enabled, Kiki now runs a lightweight first-stage Whisper probe before invoking the configured full transcription model. Auto and English configurations use `whisper-tiny.en` for the probe; other configured languages use `whisper-base`. If the wake word is absent, the utterance is discarded and Kiki continues listening. If it is present, the selected local Whisper model performs the full transcription.
 
-Local speech settings must also correspond to real backend behavior. The frontend currently stores a `localSttModel` choice, while the transcription API passes audio, sample rate, and language to the Go backend and the Whisper service resolves its own model path. Until model selection is wired end to end, the UI must not imply that changing this value changes the active Whisper model.
+The local STT model selector is wired end to end. The frontend sends the selected model identifier through the backend API, and the Go Whisper service resolves only an allowlisted set of model IDs: `whisper-tiny.en`, `whisper-base`, `whisper-small`, `whisper-medium`, and `whisper-large`. Missing selected models are downloaded on first use. The client and loopback server permit long-running first-use model operations so larger model downloads are not cut off by the normal request timeout.
+
+This two-stage design substantially reduces unnecessary full-model work, but it is still speech recognition rather than a dedicated acoustic wake-word engine. A future optimization can replace the first-stage Whisper probe with a specialized low-cost detector without changing the full-transcription contract.
 
 ## Assistant tooling and permissions
 
-Alice already contains the essential desktop-assistant tools, including opening applications and files, clipboard access, directory inspection, shell command execution, reminders, scheduling, memory, and web-related capabilities. Tool availability and execution permission are separate concerns and should remain separate. AliceMod can expose a useful local tool set by default while retaining approval gates for potentially consequential operations.
+Kiki contains the essential desktop-assistant tools, including opening applications and files, clipboard access, directory inspection, shell command execution, reminders, scheduling, and memory. The local-first defaults expose these useful capabilities to the model while keeping command execution behind the existing approval system. Tool availability and execution permission remain separate concerns.
 
 Local model compatibility is part of this contract. Tool schemas must remain valid for Ollama and LM Studio, tool-call-only assistant turns must survive round trips, and failure handling must not force a cloud provider.
 
