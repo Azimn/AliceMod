@@ -2,7 +2,7 @@
   "name": "alice-ai-app",
   "version": "1.5.0",
   "main": "dist-electron/main/index.js",
-  "description": "Alice AI assistant app",
+  "description": "Kiki AI assistant app",
   "author": "pmbstyle",
   "license": "MIT",
   "private": true,
