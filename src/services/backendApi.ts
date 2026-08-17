@@ -5,7 +5,6 @@
 
 import axios, { AxiosInstance, AxiosError } from 'axios'
 
-// Response types matching the Go backend API
 export interface ApiResponse<T = any> {
   success: boolean
   data?: T
@@ -30,7 +29,7 @@ export interface TranscriptionResult {
 }
 
 export interface SynthesisResult {
-  audio: number[] // Will be converted from base64
+  audio: number[]
   format: string
   sample_rate: number
   duration?: number
@@ -77,18 +76,17 @@ class BackendApiError extends Error {
 
 export class BackendApi {
   private client: AxiosInstance
-  private baseUrl = 'http://127.0.0.1:8765' // Default, will be updated
+  private baseUrl = 'http://127.0.0.1:8765'
 
   constructor() {
     this.client = axios.create({
-      baseURL: this.baseUrl, // Set default URL immediately
-      timeout: 30000, // 30 seconds
+      baseURL: this.baseUrl,
+      timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
       },
     })
 
-    // Add response interceptor for error handling
     this.client.interceptors.response.use(
       response => response,
       (error: AxiosError) => {
@@ -107,14 +105,9 @@ export class BackendApi {
     )
   }
 
-  /**
-   * Initialize the API client with the backend URL
-   */
   async initialize(): Promise<void> {
     try {
-      // Check if we're in Electron environment
       if (typeof window !== 'undefined' && window.aliceIPC) {
-        // Get API URL from Electron main process
         const result = await window.aliceIPC.invoke('backend:get-api-url')
         if (result?.success && result.data?.apiUrl) {
           this.baseUrl = result.data.apiUrl
@@ -127,17 +120,12 @@ export class BackendApi {
         }
       }
 
-      // Fallback to default URL
       console.log('[BackendApi] Using default URL:', this.baseUrl)
     } catch (error) {
       console.error('[BackendApi] Failed to get API URL, using default:', error)
-      // Keep default URL
     }
   }
 
-  /**
-   * Check if the backend is healthy
-   */
   async isHealthy(): Promise<boolean> {
     try {
       const response =
@@ -148,9 +136,6 @@ export class BackendApi {
     }
   }
 
-  /**
-   * Get backend health information
-   */
   async getHealth(): Promise<HealthResponse> {
     const response =
       await this.client.get<ApiResponse<HealthResponse>>('/api/health')
@@ -162,9 +147,6 @@ export class BackendApi {
     return response.data.data!
   }
 
-  /**
-   * Get service status
-   */
   async getServiceStatus(): Promise<{
     stt: boolean
     tts: boolean
@@ -174,15 +156,11 @@ export class BackendApi {
     return health.services
   }
 
-  // STT Methods
-
-  /**
-   * Transcribe audio data
-   */
   async transcribeAudio(
     audioData: Float32Array,
     sampleRate = 16000,
-    language?: string
+    language?: string,
+    model?: string
   ): Promise<TranscriptionResult> {
     const response = await this.client.post<ApiResponse<TranscriptionResult>>(
       '/api/stt/transcribe-audio',
@@ -190,6 +168,7 @@ export class BackendApi {
         audio_data: Array.from(audioData),
         sample_rate: sampleRate,
         language,
+        model,
       }
     )
 
@@ -200,17 +179,18 @@ export class BackendApi {
     return response.data.data!
   }
 
-  /**
-   * Transcribe audio file
-   */
   async transcribeFile(
     file: File,
-    language?: string
+    language?: string,
+    model?: string
   ): Promise<TranscriptionResult> {
     const formData = new FormData()
     formData.append('file', file)
     if (language) {
       formData.append('language', language)
+    }
+    if (model) {
+      formData.append('model', model)
     }
 
     const response = await this.client.post<ApiResponse<TranscriptionResult>>(
@@ -232,9 +212,6 @@ export class BackendApi {
     return response.data.data!
   }
 
-  /**
-   * Check if STT is ready
-   */
   async isSTTReady(): Promise<boolean> {
     try {
       const response =
@@ -245,9 +222,6 @@ export class BackendApi {
     }
   }
 
-  /**
-   * Get STT service information
-   */
   async getSTTInfo(): Promise<any> {
     const response = await this.client.get<ApiResponse<any>>('/api/stt/info')
 
@@ -258,11 +232,6 @@ export class BackendApi {
     return response.data.data
   }
 
-  // TTS Methods
-
-  /**
-   * Synthesize speech from text
-   */
   async synthesizeSpeech(
     text: string,
     voice?: string
@@ -284,9 +253,6 @@ export class BackendApi {
     return response.data.data!
   }
 
-  /**
-   * Get available voices
-   */
   async getAvailableVoices(): Promise<Voice[]> {
     const response =
       await this.client.get<ApiResponse<{ voices: Voice[] }>>('/api/tts/voices')
@@ -298,9 +264,6 @@ export class BackendApi {
     return response.data.data!.voices
   }
 
-  /**
-   * Check if TTS is ready
-   */
   async isTTSReady(): Promise<boolean> {
     try {
       const response =
@@ -311,9 +274,6 @@ export class BackendApi {
     }
   }
 
-  /**
-   * Get TTS service information
-   */
   async getTTSInfo(): Promise<any> {
     const response = await this.client.get<ApiResponse<any>>('/api/tts/info')
 
@@ -324,9 +284,6 @@ export class BackendApi {
     return response.data.data
   }
 
-  /**
-   * Get current default voice
-   */
   async getDefaultVoice(): Promise<string> {
     const response = await this.client.get<
       ApiResponse<{ default_voice: string }>
@@ -341,9 +298,6 @@ export class BackendApi {
     return response.data.data!.default_voice
   }
 
-  /**
-   * Set default voice
-   */
   async setDefaultVoice(voice: string): Promise<void> {
     const response = await this.client.post<ApiResponse<any>>(
       '/api/tts/default-voice',
@@ -359,11 +313,6 @@ export class BackendApi {
     }
   }
 
-  // Embeddings Methods
-
-  /**
-   * Generate embedding for text
-   */
   async generateEmbedding(
     text: string,
     inputType: EmbeddingInputType = 'query'
@@ -385,9 +334,6 @@ export class BackendApi {
     return response.data.data!.embedding
   }
 
-  /**
-   * Generate embeddings for multiple texts
-   */
   async generateEmbeddings(
     texts: string[],
     inputType: EmbeddingInputType = 'passage'
@@ -409,9 +355,6 @@ export class BackendApi {
     return response.data.data!.embeddings
   }
 
-  /**
-   * Compute similarity between embeddings
-   */
   async computeSimilarity(
     embedding1: number[],
     embedding2: number[]
@@ -433,9 +376,6 @@ export class BackendApi {
     return response.data.data!.similarity
   }
 
-  /**
-   * Search for similar embeddings
-   */
   async searchSimilar(
     queryEmbedding: number[],
     candidateEmbeddings: number[][],
@@ -459,9 +399,6 @@ export class BackendApi {
     return response.data.data!
   }
 
-  /**
-   * Check if embeddings service is ready
-   */
   async isEmbeddingsReady(): Promise<boolean> {
     try {
       const response = await this.client.get<ApiResponse<{ ready: boolean }>>(
@@ -473,9 +410,6 @@ export class BackendApi {
     }
   }
 
-  /**
-   * Get embeddings service information
-   */
   async getEmbeddingsInfo(): Promise<any> {
     const response = await this.client.get<ApiResponse<any>>(
       '/api/embeddings/info'
@@ -490,11 +424,6 @@ export class BackendApi {
     return response.data.data
   }
 
-  // Model Management
-
-  /**
-   * Download a specific model
-   */
   async downloadModel(service: 'stt' | 'tts' | 'embeddings'): Promise<{
     success: boolean
     message?: string
@@ -504,7 +433,7 @@ export class BackendApi {
       `/api/models/download/${service}`,
       {},
       {
-        timeout: 300000, // 5 minutes for model downloads
+        timeout: 300000,
       }
     )
 
@@ -515,9 +444,6 @@ export class BackendApi {
     }
   }
 
-  /**
-   * Get model status
-   */
   async getModelStatus(): Promise<any> {
     const response =
       await this.client.get<ApiResponse<any>>('/api/models/status')
@@ -531,9 +457,6 @@ export class BackendApi {
     return response.data.data
   }
 
-  /**
-   * Get model download status
-   */
   async getModelDownloadStatus(): Promise<{
     stt: { installed: boolean; downloading: boolean }
     tts: { installed: boolean; downloading: boolean }
@@ -553,5 +476,4 @@ export class BackendApi {
   }
 }
 
-// Global instance
 export const backendApi = new BackendApi()
