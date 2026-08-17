@@ -41,6 +41,30 @@ Perform this on a clean Windows installation or a clean Windows user profile.
 - Shell execution displays the native Run once confirmation before execution.
 - Model-visible tools do not include `schedule_task` or `manage_scheduled_tasks` while scheduled-command approval remains unhardened.
 
+## Windows runtime integrity
+
+- `npm run build:go` runs `scripts/prepare-kiki-windows-runtime.js` before the inherited backend build helper.
+- Windows x64 Whisper is downloaded from the pinned official whisper.cpp v1.9.2 release when not already present.
+- The Whisper archive SHA-256 matches the pinned expected digest before extraction.
+- Windows x64 FFmpeg is downloaded from the pinned BtbN Auto-Build 2026-08-16 release when not already present.
+- The FFmpeg archive SHA-256 matches the pinned expected digest before extraction.
+- A checksum mismatch terminates the build.
+- The inherited `aliceai.ca` Whisper download path is not reached during a normal Windows x64 build after verified runtime preparation succeeds.
+
+## Character fidelity smoke test
+
+Kiki is an existing character implementation, not merely a renamed application.
+
+- A fresh install loads the canonical Kiki prompt by default.
+- Kiki retains a late-1980s/1990s valley-girl social voice without turning it into repetitive catchphrases.
+- Her technical reasoning remains highly competent without switching into a formal professor persona.
+- Her default personal voice does not introduce post-1999 slang, memes, or pop-culture framing.
+- Practical assistant tasks remain direct and competent rather than being obstructed by characterization.
+- Multi-turn interaction feels socially continuous rather than resetting tone and relationship stance every message.
+- Switching between supported local models changes capability more than identity.
+- Memory recall changes what Kiki knows about prior interaction without changing who she is.
+- `docs/KIKI_CHARACTER.md` remains consistent with the default persona prompt.
+
 ## Cost-boundary checks
 
 Run with a stored OpenAI API key present to test that local selection still wins.
@@ -76,7 +100,7 @@ Run with a stored OpenAI API key present to test that local selection still wins
 - PR diff is reviewed for accidental unrelated replacements.
 - PR description matches implemented behavior.
 - No unresolved review threads remain.
-- Release notes describe local-first defaults, provider cost boundaries, strict Piper readiness, wake-word changes, Whisper model selection, safety restrictions, and updater isolation.
+- Release notes describe local-first defaults, provider cost boundaries, strict Piper readiness, wake-word changes, Whisper model selection, safety restrictions, updater isolation, runtime integrity, and Kiki character fidelity.
 - The release tag matches the package version used by Electron Builder.
 - All release artifacts are attached to the GitHub release.
 - Automatic update from the newly published Kiki release is tested from the previous Kiki build.
