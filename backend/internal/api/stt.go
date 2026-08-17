@@ -13,6 +13,7 @@ type TranscribeRequest struct {
 	AudioData  []float32 `json:"audio_data,omitempty"`
 	SampleRate int       `json:"sample_rate,omitempty"`
 	Language   string    `json:"language,omitempty"`
+	Model      string    `json:"model,omitempty"`
 }
 
 // TranscribeResponse represents a transcription response
@@ -37,13 +38,12 @@ func (h *Handler) TranscribeAudio(w http.ResponseWriter, r *http.Request) {
 
 	var audioData []byte
 	var language string
+	var model string
 	var err error
 
-	// Check Content-Type to determine request format
 	contentType := r.Header.Get("Content-Type")
-	
+
 	if contentType == "application/json" {
-		// Handle JSON request (from frontend audio processing)
 		var req TranscribeRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			h.writeError(w, http.StatusBadRequest, "Invalid JSON request body")
@@ -55,28 +55,22 @@ func (h *Handler) TranscribeAudio(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Store language from request
 		language = req.Language
+		model = req.Model
 
-		// Convert Float32Array to 16-bit PCM bytes
 		audioData = make([]byte, len(req.AudioData)*2)
 		for i, sample := range req.AudioData {
-			// Clamp sample to [-1, 1] range
 			if sample > 1.0 {
 				sample = 1.0
 			} else if sample < -1.0 {
 				sample = -1.0
 			}
-			
-			// Convert float32 to 16-bit signed integer
+
 			sample16 := int16(sample * 32767)
-			
-			// Write as little-endian 16-bit
 			audioData[i*2] = byte(sample16 & 0xFF)
 			audioData[i*2+1] = byte((sample16 >> 8) & 0xFF)
 		}
 	} else {
-		// Handle multipart form (file upload)
 		if err := r.ParseMultipartForm(10 << 20); err != nil {
 			h.writeError(w, http.StatusBadRequest, "Failed to parse multipart form")
 			return
@@ -84,7 +78,6 @@ func (h *Handler) TranscribeAudio(w http.ResponseWriter, r *http.Request) {
 
 		file, _, err := r.FormFile("file")
 		if err != nil {
-			// Try "audio" field for backward compatibility
 			file, _, err = r.FormFile("audio")
 			if err != nil {
 				h.writeError(w, http.StatusBadRequest, "Failed to get audio file (expected 'file' or 'audio' field)")
@@ -93,10 +86,9 @@ func (h *Handler) TranscribeAudio(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 
-		// Get language from form parameter
 		language = r.FormValue("language")
+		model = r.FormValue("model")
 
-		// Read audio data
 		audioData, err = io.ReadAll(file)
 		if err != nil {
 			h.writeError(w, http.StatusInternalServerError, "Failed to read audio file")
@@ -104,8 +96,12 @@ func (h *Handler) TranscribeAudio(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Transcribe audio with language parameter
-	text, err := sttService.TranscribeAudioWithLanguage(r.Context(), audioData, language)
+	text, err := sttService.TranscribeAudioWithLanguageAndModel(
+		r.Context(),
+		audioData,
+		language,
+		model,
+	)
 	if err != nil {
 		h.writeError(w, http.StatusInternalServerError, "Transcription failed: "+err.Error())
 		return
@@ -113,8 +109,8 @@ func (h *Handler) TranscribeAudio(w http.ResponseWriter, r *http.Request) {
 
 	h.writeSuccess(w, TranscribeResponse{
 		Text:       text,
-		Confidence: 0.95, // Placeholder confidence
-		Duration:   1.0,  // Placeholder duration
+		Confidence: 0.95,
+		Duration:   1.0,
 	})
 }
 
