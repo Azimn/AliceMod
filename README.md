@@ -4,6 +4,26 @@ Kiki is a local-first desktop AI assistant for Windows, macOS, and Linux, built 
 
 This fork is focused on making the assistant useful without requiring metered AI API usage. The baseline configuration uses Ollama for the language model, local Whisper for speech recognition, Piper for speech synthesis, and local embeddings for memory and RAG. Cloud providers remain optional.
 
+## Easiest Windows test path
+
+For the intended Windows x64 test build, the goal is to avoid manual build choreography.
+
+1. Install Git, Node.js 22 or newer, Go 1.23 or newer, Python 3.11, and Ollama.
+2. Clone the repository and switch to `agent/local-first-tool-calls`.
+3. Double-click `INSTALL_KIKI_WINDOWS.cmd`.
+
+The launcher checks the required tools and versions, checks that Ollama responds, shows installed Ollama models, recommends and optionally downloads a starter Qwen3 model when none are installed, installs Node dependencies, downloads and verifies local embedding assets, runs the frontend and Go tests, rebuilds Electron native modules, prepares verified Windows speech runtime assets, builds Kiki, finds the generated installer, and launches it.
+
+If a prerequisite is missing, the launcher stops and prints a suggested `winget` command. If a test, download integrity check, compilation step, or packaging step fails, it stops instead of installing a known-bad build.
+
+A successful run produces and launches:
+
+```text
+release\1.5.0\Kiki-Windows-1.5.0-Setup.exe
+```
+
+Windows SmartScreen may warn about the installer because this personal release-candidate build is not code-signed.
+
 ## What Kiki can do
 
 - Converse through text or voice.
@@ -60,7 +80,7 @@ Release artifacts are named:
 
 The updater is configured to use `Azimn/AliceMod` releases, not upstream Alice releases.
 
-## Local Windows build and install
+## Manual Windows build and install
 
 Requirements:
 
@@ -92,14 +112,6 @@ npm run package:local
 ```
 
 `package:local` creates a Google-disabled local `app-config.json` only when no real configuration exists, runs the frontend and Go tests, rebuilds Electron native modules, prepares the verified local speech runtime, builds the backend and frontend, and invokes Electron Builder without publishing.
-
-On Windows, a successful build produces:
-
-```text
-release\1.5.0\Kiki-Windows-1.5.0-Setup.exe
-```
-
-Run that installer to test Kiki. If any test or build step fails, `package:local` stops rather than packaging a known failing candidate.
 
 A real `app-config.json` can still be supplied before packaging if Google integration is desired. The local preparation step never overwrites an existing file.
 
