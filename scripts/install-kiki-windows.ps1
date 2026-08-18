@@ -33,6 +33,63 @@ function Get-MajorVersion([string]$Text) {
     return 0
 }
 
+function Test-PythonExecutable([string]$Executable) {
+    try {
+        $output = & $Executable -c "import sys; print(sys.executable); print('.'.join(map(str, sys.version_info[:3])))" 2>$null
+        if ($LASTEXITCODE -ne 0 -or $output.Count -lt 2) {
+            return $null
+        }
+        return [PSCustomObject]@{
+            Path = $output[0].Trim()
+            Version = $output[1].Trim()
+        }
+    }
+    catch {
+        return $null
+    }
+}
+
+function Resolve-Python {
+    $pyLauncher = Get-Command 'py' -ErrorAction SilentlyContinue
+    if ($pyLauncher) {
+        try {
+            $output = & py -3.11 -c "import sys; print(sys.executable); print('.'.join(map(str, sys.version_info[:3])))" 2>$null
+            if ($LASTEXITCODE -eq 0 -and $output.Count -ge 2) {
+                return [PSCustomObject]@{
+                    Path = $output[0].Trim()
+                    Version = $output[1].Trim()
+                }
+            }
+        }
+        catch {
+        }
+    }
+
+    $pythonCommand = Get-Command 'python' -ErrorAction SilentlyContinue
+    if ($pythonCommand -and $pythonCommand.Source -notmatch 'WindowsApps') {
+        $resolved = Test-PythonExecutable $pythonCommand.Source
+        if ($resolved) {
+            return $resolved
+        }
+    }
+
+    if ($pyLauncher) {
+        try {
+            $output = & py -3 -c "import sys; print(sys.executable); print('.'.join(map(str, sys.version_info[:3])))" 2>$null
+            if ($LASTEXITCODE -eq 0 -and $output.Count -ge 2) {
+                return [PSCustomObject]@{
+                    Path = $output[0].Trim()
+                    Version = $output[1].Trim()
+                }
+            }
+        }
+        catch {
+        }
+    }
+
+    return $null
+}
+
 function Invoke-Step([string]$Label, [scriptblock]$Action) {
     Write-Section $Label
     & $Action
@@ -61,8 +118,19 @@ $allPresent = (Require-Command 'git' 'winget install --id Git.Git -e') -and $all
 $allPresent = (Require-Command 'node' 'winget install --id OpenJS.NodeJS.LTS -e') -and $allPresent
 $allPresent = (Require-Command 'npm' 'Install Node.js LTS, which includes npm') -and $allPresent
 $allPresent = (Require-Command 'go' 'winget install --id GoLang.Go -e') -and $allPresent
-$allPresent = (Require-Command 'python' 'winget install --id Python.Python.3.11 -e') -and $allPresent
 $allPresent = (Require-Command 'ollama' 'winget install --id Ollama.Ollama -e') -and $allPresent
+
+$python = Resolve-Python
+if (-not $python) {
+    Write-Host 'Missing: usable Python' -ForegroundColor Yellow
+    Write-Host 'The Windows Store python alias does not count as an installed interpreter.'
+    Write-Host 'Install Python 3.11, reopen this folder, then run INSTALL_KIKI_WINDOWS.cmd again.'
+    Write-Host 'Suggested command: winget install --id Python.Python.3.11 -e'
+    $allPresent = $false
+}
+else {
+    Write-Host "Found: Python $($python.Version) at $($python.Path)"
+}
 
 if (-not $allPresent) {
     Fail 'One or more prerequisites are missing.'
@@ -85,14 +153,14 @@ if ($goMinor -lt 23) {
 }
 Write-Host $goVersion
 
-$pythonVersion = (& python --version 2>&1).ToString()
-if ($pythonVersion -notmatch 'Python 3\.11') {
-    Write-Host "WARNING: Python 3.11 is the validated native-module version. Detected: $pythonVersion" -ForegroundColor Yellow
+if ($python.Version -notmatch '^3\.11\.') {
+    Write-Host "WARNING: Python 3.11 is the validated native-module version. Detected: Python $($python.Version)" -ForegroundColor Yellow
     Write-Host 'The build may still work, but Python 3.11 is preferred.'
 }
-else {
-    Write-Host $pythonVersion
-}
+
+$env:PYTHON = $python.Path
+$env:npm_config_python = $python.Path
+Write-Host "Python for npm/node-gyp: $($python.Path)"
 
 Write-Section 'Ollama check'
 
