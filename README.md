@@ -60,44 +60,63 @@ Release artifacts are named:
 
 The updater is configured to use `Azimn/AliceMod` releases, not upstream Alice releases.
 
-## Development
+## Local Windows build and install
 
 Requirements:
 
+- Git
 - Node.js 22 or newer
 - Go 1.23
 - Python 3.11 for native Node module builds
 - Ollama or LM Studio for local LLM use
 
-```bash
+Clone the repository and switch to the Kiki release-candidate branch:
+
+```powershell
 git clone https://github.com/Azimn/AliceMod.git
 cd AliceMod
+git switch agent/local-first-tool-calls
 npm ci
 ```
 
-For local embedding assets:
+Download and verify the local embedding assets once:
 
-```bash
+```powershell
 npm run setup:embeddings
 ```
 
-Run tests:
+Then perform the complete local verification and packaging sequence:
 
-```bash
-npm run test
-cd backend
-go test ./...
+```powershell
+npm run package:local
 ```
 
-Build the Go backend and application:
+`package:local` creates a Google-disabled local `app-config.json` only when no real configuration exists, runs the frontend and Go tests, rebuilds Electron native modules, prepares the verified local speech runtime, builds the backend and frontend, and invokes Electron Builder without publishing.
+
+On Windows, a successful build produces:
+
+```text
+release\1.5.0\Kiki-Windows-1.5.0-Setup.exe
+```
+
+Run that installer to test Kiki. If any test or build step fails, `package:local` stops rather than packaging a known failing candidate.
+
+A real `app-config.json` can still be supplied before packaging if Google integration is desired. The local preparation step never overwrites an existing file.
+
+## Development commands
+
+Run tests without packaging:
+
+```bash
+npm run verify:local
+```
+
+Build only the Go backend and application pieces:
 
 ```bash
 npm run build:go
 npm run build:web
-npx electron-builder --publish never
 ```
-
-For Google integration, production builds may provide an `app-config.json` containing the Google client ID and client secret used by the inherited integration.
 
 ## Current release gate
 
