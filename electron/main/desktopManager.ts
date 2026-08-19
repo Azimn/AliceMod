@@ -23,7 +23,6 @@ class DesktopManager {
   }
 
   private registerIpcHandlers() {
-    // Remove existing handlers if they exist
     if (ipcMain.listenerCount('desktop:listDirectory') > 0) {
       ipcMain.removeAllListeners('desktop:listDirectory')
     }
@@ -58,7 +57,7 @@ class DesktopManager {
             noLink: true,
             title: 'Allow directory access?',
             message:
-              'Alice wants to read this directory and its subdirectories.',
+              'Kiki wants to read this directory and its subdirectories.',
             detail: requestedPath,
           }
           const confirmation = owner
@@ -105,7 +104,7 @@ class DesktopManager {
               cancelId: 0,
               noLink: true,
               title: 'Allow command execution?',
-              message: 'Alice wants to execute a command on this computer.',
+              message: 'Kiki wants to execute a command on this computer.',
               detail: commandPreview,
             })
           : await dialog.showMessageBox({
@@ -115,7 +114,7 @@ class DesktopManager {
               cancelId: 0,
               noLink: true,
               title: 'Allow command execution?',
-              message: 'Alice wants to execute a command on this computer.',
+              message: 'Kiki wants to execute a command on this computer.',
               detail: commandPreview,
             })
 

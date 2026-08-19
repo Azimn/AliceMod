@@ -1,6 +1,7 @@
 import type OpenAI from 'openai'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { getLMStudioClient } from '../apiClients'
+import { hasUsableLocalMessage } from './localMessageUtils'
 import { convertLocalLLMStreamToResponsesFormat } from './streamAdapters'
 import { buildToolsForProvider } from './tools'
 
@@ -111,7 +112,7 @@ export const createLMStudioResponse = async (
             : 'Message received.',
       }
     })
-    .filter(msg => msg.content?.trim && msg.content.trim())
+    .filter(hasUsableLocalMessage)
 
   if (customInstructions && !messages.some(msg => msg.role === 'system')) {
     messages.unshift({
@@ -119,8 +120,6 @@ export const createLMStudioResponse = async (
       content: customInstructions,
     })
   }
-
-  console.log('[lm-studio] Final messages:', JSON.stringify(messages, null, 2))
 
   const params: OpenAI.Chat.ChatCompletionCreateParams = {
     model: settings.assistantModel || 'llama3.2',

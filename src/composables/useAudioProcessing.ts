@@ -5,6 +5,7 @@ import { createVadOptions } from './vadRuntime'
 import { useGeneralStore } from '../stores/generalStore'
 import { useConversationStore } from '../stores/conversationStore'
 import { useSettingsStore } from '../stores/settingsStore'
+import { backendApi } from '../services/backendApi'
 import { storeToRefs } from 'pinia'
 import eventBus from '../utils/eventBus'
 
@@ -138,7 +139,7 @@ export function useAudioProcessing() {
               audioState.value === 'WAITING_FOR_RESPONSE'
             ) {
               console.log(
-                `[VAD Barge-In] User interrupted Alice during ${audioState.value}. Stopping processes.`
+                `[VAD Barge-In] User interrupted Kiki during ${audioState.value}. Stopping processes.`
               )
               eventBus.emit('cancel-llm-stream')
               generalStore.stopPlaybackAndClearQueue()
@@ -239,6 +240,21 @@ export function useAudioProcessing() {
     return { hasWakeWord: false, command: transcription }
   }
 
+  const transcribeWakeProbe = async (audio: Float32Array) => {
+    const language = settingsStore.config.localSttLanguage || 'auto'
+    const wakeModel =
+      language === 'auto' || language === 'en'
+        ? 'whisper-tiny.en'
+        : 'whisper-base'
+    const result = await backendApi.transcribeAudio(
+      audio,
+      16000,
+      language === 'auto' ? undefined : language,
+      wakeModel
+    )
+    return result.text || ''
+  }
+
   const processAudioRecording = async (audio: Float32Array) => {
     if (audioState.value !== 'LISTENING' || !audio || audio.length === 0) {
       console.warn(
@@ -252,30 +268,53 @@ export function useAudioProcessing() {
 
     try {
       const wavBuffer = float32ArrayToWav(audio, 16000)
+      const wakeModeEnabled =
+        settingsStore.config.localSttEnabled &&
+        settingsStore.config.sttProvider === 'local'
+
+      if (wakeModeEnabled) {
+        awaitingWakeWord.value = true
+        wakeWordDetected.value = false
+
+        const wakeProbe = await transcribeWakeProbe(audio)
+        const wakeResult = checkForWakeWord(wakeProbe)
+        if (!wakeResult.hasWakeWord) {
+          console.log(
+            '[Audio Processing] Wake word not detected by lightweight probe; continuing to listen'
+          )
+          setAudioState(isRecordingRequested.value ? 'LISTENING' : 'IDLE')
+          isSpeechDetected.value = false
+          return
+        }
+
+        wakeWordDetected.value = true
+        awaitingWakeWord.value = false
+
+        let transcription = wakeProbe
+        if (settingsStore.config.localSttModel !== 'whisper-tiny.en') {
+          transcription = await conversationStore.transcribeAudioMessage(wavBuffer)
+        }
+
+        if (transcription && transcription.trim()) {
+          const fullResult = checkForWakeWord(transcription)
+          const command = fullResult.hasWakeWord
+            ? fullResult.command
+            : transcription.trim()
+          generalStore.recognizedText = command
+          eventBus.emit('processing-complete', command)
+        } else {
+          setAudioState(isRecordingRequested.value ? 'LISTENING' : 'IDLE')
+          isSpeechDetected.value = false
+        }
+        return
+      }
+
       const transcription =
         await conversationStore.transcribeAudioMessage(wavBuffer)
 
       if (transcription && transcription.trim()) {
-        if (
-          settingsStore.config.localSttEnabled &&
-          settingsStore.config.sttProvider === 'local'
-        ) {
-          const { hasWakeWord, command } = checkForWakeWord(transcription)
-
-          if (hasWakeWord) {
-            generalStore.recognizedText = command
-            eventBus.emit('processing-complete', command)
-          } else {
-            console.log(
-              '[Audio Processing] Wake word not detected, continuing to listen'
-            )
-            setAudioState(isRecordingRequested.value ? 'LISTENING' : 'IDLE')
-            isSpeechDetected.value = false
-          }
-        } else {
-          generalStore.recognizedText = transcription
-          eventBus.emit('processing-complete', transcription)
-        }
+        generalStore.recognizedText = transcription
+        eventBus.emit('processing-complete', transcription)
       } else {
         setAudioState(isRecordingRequested.value ? 'LISTENING' : 'IDLE')
         isSpeechDetected.value = false
@@ -285,6 +324,11 @@ export function useAudioProcessing() {
       generalStore.statusMessage = 'Error: Transcription failed'
       setAudioState(isRecordingRequested.value ? 'LISTENING' : 'IDLE')
       isSpeechDetected.value = false
+      awaitingWakeWord.value =
+        isRecordingRequested.value &&
+        settingsStore.config.localSttEnabled &&
+        settingsStore.config.sttProvider === 'local'
+      wakeWordDetected.value = false
     }
   }
 

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useSettingsStore } from '../../../stores/settingsStore'
+import { PREDEFINED_OPENAI_TOOLS } from '../../../utils/assistantTools'
 
 function installWindowMocks() {
   ;(globalThis as any).window = {
@@ -56,6 +57,36 @@ describe('buildToolsForProvider', () => {
     expect(tools).toContainEqual({ type: 'openrouter:web_search' })
     expect(tools).not.toContainEqual(
       expect.objectContaining({ name: 'perform_web_search' })
+    )
+  })
+
+  it('removes unsafe scheduler tools from the predefined catalog', () => {
+    const toolNames = PREDEFINED_OPENAI_TOOLS.map(tool => tool.name)
+
+    expect(toolNames).not.toContain('schedule_task')
+    expect(toolNames).not.toContain('manage_scheduled_tasks')
+  })
+
+  it('does not expose scheduler tools to model providers', async () => {
+    const settingsStore = useSettingsStore()
+    settingsStore.updateSetting('aiProvider', 'ollama')
+    settingsStore.updateSetting('assistantTools', [
+      'get_current_datetime',
+      'schedule_task',
+      'manage_scheduled_tasks',
+    ])
+
+    const { buildToolsForProvider } = await import('../tools')
+    const tools = await buildToolsForProvider()
+
+    expect(tools).toContainEqual(
+      expect.objectContaining({ name: 'get_current_datetime' })
+    )
+    expect(tools).not.toContainEqual(
+      expect.objectContaining({ name: 'schedule_task' })
+    )
+    expect(tools).not.toContainEqual(
+      expect.objectContaining({ name: 'manage_scheduled_tasks' })
     )
   })
 })

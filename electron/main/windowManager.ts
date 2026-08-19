@@ -93,7 +93,7 @@ export function getSettingsWindow(): BrowserWindow | null {
 
 export async function createMainWindow(): Promise<BrowserWindow> {
   win = new BrowserWindow({
-    title: 'Alice',
+    title: 'Kiki',
     icon: path.join(getVitePublic(), 'app_logo.png'),
     transparent: true,
     frame: false,
@@ -128,7 +128,7 @@ export async function createMainWindow(): Promise<BrowserWindow> {
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send(
       'main-process-message',
-      `Alice ready at ${new Date().toLocaleString()}`
+      `Kiki ready at ${new Date().toLocaleString()}`
     )
   })
 
@@ -252,7 +252,7 @@ export async function createSettingsWindow(): Promise<BrowserWindow> {
   }
 
   settingsWindow = new BrowserWindow({
-    title: 'Alice Settings',
+    title: 'Kiki Settings',
     icon: path.join(getVitePublic(), 'app_logo.png'),
     width: 900,
     height: 700,

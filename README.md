@@ -1,203 +1,147 @@
-# Alice
+# Kiki
 
-<img src="https://img.shields.io/github/license/pmbstyle/alice"> <img src="https://img.shields.io/github/v/release/pmbstyle/alice"> <img src="https://img.shields.io/github/downloads/pmbstyle/Alice/total">
+Kiki is a local-first desktop AI assistant for Windows, macOS, and Linux, built from the open-source Alice project.
 
-Say "Hi" to Alice 👋, your open-source AI companion designed to live on your desktop.
+This fork is focused on making the assistant useful without requiring metered AI API usage. The baseline configuration uses Ollama for the language model, local Whisper for speech recognition, Piper for speech synthesis, and local embeddings for memory and RAG. Cloud providers remain optional.
 
-Alice brings together voice interaction, intelligent context awareness, powerful tooling, and a friendly personality to assist you with everything from daily tasks to deeper creative work.
-Alice is more than a chatbot; she’s built to feel present, responsive, emotionally engaging, and deeply useful.
+## Easiest Windows test path
 
-## Quick showcase
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=fDYUjh6UXqk">
-    <img width="817" height="504" alt="AliceVideo" src="https://github.com/user-attachments/assets/9e0ffee2-198a-43a0-9f9a-a003d221e31d" />
-  </a>
-</p>
+For the intended Windows x64 test build, the goal is to avoid manual build choreography.
 
-## ✨ Key Features
+1. Install Git, Node.js 22 or newer, Go 1.23 or newer, Python 3.11, and Ollama.
+2. Clone the repository and switch to `agent/local-first-tool-calls`.
+3. Double-click `INSTALL_KIKI_WINDOWS.cmd`.
 
-### 💻 Local and Cloud use
+The launcher checks the required tools and versions, checks that Ollama responds, shows installed Ollama models, recommends and optionally downloads a starter Qwen3 model when none are installed, installs Node dependencies, downloads and verifies local embedding assets, runs the frontend and Go tests, rebuilds Electron native modules, prepares verified Windows speech runtime assets, builds Kiki, finds the generated installer, and launches it.
 
-Alice is designed to work with Cloud(OpenAI / Codex subscription, OpenRouter, Z.ai, Minimax, Deepseek) and Local LLMs (Ollama/LM Studio).
-Has built-in speech-to-text, text-to-speech, and embedding services.
-While the OpenAI cloud API is preferred and provides the best user experience, Alice can also operate **fully locally** (experimental).
+If a prerequisite is missing, the launcher stops and prints a suggested `winget` command. If a test, download integrity check, compilation step, or packaging step fails, it stops instead of installing a known-bad build.
 
-### 🗣️ Voice Interaction
+A successful run produces and launches:
 
-* Fast, VAD-powered voice recognition (via `gpt-4o-transcribe`, `google-tts-voice` or `whisper-large-v3`)
-* Natural-sounding responses with OpenAI/Google TTS and optional support for local multilingual text-to-speech via Piper TTS
-* Interruptible speech and streaming response cancellation for smoother flow
-
-### 🧠 Memory & Context
-
-* **Thoughts**: Short-term context stored in Hnswlib vector DB
-* **Memories**: Structured long-term facts in local DB
-* **Summarization**: Compact message history into context prompts
-* **Emotion awareness**: Summaries include mood estimation for more human responses
-* **Local RAG**: Add local documents to the LLM context, chat with your docs
-
-### 🎨 Vision & Visual Output
-
-* Screenshot interpretation using Vision API
-* Image generation using `gpt-image-2`
-* Animated video states (standby/speaking/thinking)
-
-### 🪄 Computer Use Tools
-
-Alice can interact with your local system with user-approved permissions:
-
-* 📂 File system browsing (e.g., listing folders)
-* 💻 Shell command execution (`ls`, `mv`, `mkdir`, etc)
-* 🔐 Granular command approvals:
-
-  * One-time
-  * Session-based
-  * Permanent (revocable)
-* 🔧 Settings tab "Permissions" lets you review and manage all approved commands
-
-### ⚙️ Function Calling
-
-* Web search (including Searxng support)
-* Google Calendar & Gmail integration
-* Torrent search & download (via Jackett + qBittorrent)
-* Time & date awareness
-* Clipboard management
-* Task scheduler (reminders and command execution)
-* Open applications & URLs
-* Image generation
-* MCP server support
-
-### 💬 Wake Word Support  
-With the local STT model, you can set a **wake-up word** (like "Hey, Siri").  
-- Alice will always listen, but only process requests when the wake word is spoken.  
-- Default mode is **auto language detection**, but you can also select a specific language in settings. 
-
-### 💻 Dedicated Chrome [Extension](https://github.com/pmbstyle/alice-chrome-extension)
-
-* Ask Alice about your active Chrome tab
-* Context menu for selected text on a web page
-  - Fact check this
-  - Summarize this
-  - Tell me more about it
-
-### 🎛️ Flexible Settings
-
-Fully customizable settings interface:
-
-* LLM provider selection between OpenAI, OpenRouter, DeepSeek, Z.ai(coding plan), Minimax(token plan), Ollama, LM Studio
-* Cloud or local TTS, STT, Embeddings
-* Model choice & parameters (temperature, top\_p, history, etc)
-* Prompt and summarization tuning
-* Audio/mic toggles & hotkeys
-* Available tools & MCP configuration
-* Google integrations
-
-### 🔨 Custom Tools
-
-Alice supports [custom tools](https://github.com/pmbstyle/Alice/blob/main/docs/custom-tools.md) that are defined in JSON and backed by local scripts.
-
-1. Open *Settings → Customization → Custom tools*
-2. Upload or drop your script (writes to `custom-tool-scripts/`)
-3. Click **Add Tool**, fill in metadata, and paste the JSON schema. Saving updates `custom-tools.json`
-4. Toggle the tool on/off in the list. Only enabled + valid entries are offered to the model.
-
-### 🎭 Custom Avatars
-
-Swap Alice's appearance with [your own](https://github.com/pmbstyle/Alice/blob/main/docs/custom-avatars.md) video loops:
-
-1. Create a folder under `user-customization/custom-avatars/<AvatarName>/`.
-2. Drop `speaking.mp4`, `thinking.mp4`, and `standby.mp4` into that folder (all required).
-3. Open **Settings → Customization → Assistant Avatar**, hit **Refresh**, and pick the new avatar.
-
-## 🚀 Download
-
-👉 **[Download the latest release](https://github.com/pmbstyle/Alice/releases/latest)**
-
-<!-- STABLE_DOWNLOADS -->
-| Platform | Download |
-|----------|----------|
-| **Windows** | [Alice-AI-App-Windows-1.5.0-Setup.exe](https://github.com/pmbstyle/Alice/releases/download/v1.5.0/Alice-AI-App-Windows-1.5.0-Setup.exe) |
-| **macOS** | [Alice-AI-App-Mac-1.5.0-Installer.dmg](https://github.com/pmbstyle/Alice/releases/download/v1.5.0/Alice-AI-App-Mac-1.5.0-Installer.dmg) |
-| **Linux** | [Alice-AI-App-Linux-1.5.0.AppImage](https://github.com/pmbstyle/Alice/releases/download/v1.5.0/Alice-AI-App-Linux-1.5.0.AppImage) |
-| **ArchLinux**(community build) | [AUR Package](https://aur.archlinux.org/packages/alice-ai-app-bin) |
-<!-- STABLE_DOWNLOADS_END -->
-
-Follow the [Setup Instructions](https://github.com/pmbstyle/Alice/blob/main/docs/setupInstructions.md) to configure your API keys and environment.
-
-
-
-## 🛠️ Technologies Used
-
-* **Frontend:** [Vue.js](https://vuejs.org/), [TailwindCSS](https://tailwindcss.com/)
-* **Desktop Shell:** [Electron](https://www.electronjs.org/)
-* **State Management:** [Pinia](https://pinia.vuejs.org/)
-* **AI APIs:** [OpenAI](https://platform.openai.com/), [OpenRouter](https://openrouter.ai/), [DeepSeek](https://platform.deepseek.com/), [Groq](https://console.groq.com/)
-* **Backend:** [Go](https://go.dev/)
-* **Vector search engine**: [hnswlib-node](https://github.com/nmslib/hnswlib)
-* **Local storage**: [better-sqlite3](https://github.com/WiseLibs/better-sqlite3)
-* **Voice activity detection:** [VAD (Web)](https://github.com/ricky0123/vad)
-* **Local STT & TTS:** [whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp) & [Piper](https://github.com/rhasspy/piper)
-* **Local Embeddings:** [multilingual-e5-small](https://huggingface.co/intfloat/multilingual-e5-small) (ONNX, 384 dimensions)
-* **Animation:** [Kling Pro](https://fal.ai/)
-
-Other tools:
-
-* [Jackett](https://github.com/Jackett/Jackett) — Torrent aggregator
-* [qBittorrent](https://www.qbittorrent.org/) — Torrent client
-* [Searxng](https://github.com/searxng/searxng) - Self-hosted web search
-
-
-## 🧑‍💻 Getting Started (Development)
-
-```bash
-# 1. Clone the repo
-$ git clone https://github.com/pmbstyle/Alice.git
-
-# 2. Install dependencies
-$ npm install
-
-# 3. Set up your .env file (see .env.example for reference)
+```text
+release\1.5.0\Kiki-Windows-1.5.0-Setup.exe
 ```
 
-Follow [setup instructions](https://github.com/pmbstyle/Alice/blob/main/docs/setupInstructions.md) to obtain required API credentials.
+Windows SmartScreen may warn about the installer because this personal release-candidate build is not code-signed.
 
-```bash
-# 4. Download ONNX Runtime and the pinned multi-lang Memory/RAG model
+## What Kiki can do
+
+- Converse through text or voice.
+- Use Ollama or LM Studio as a local LLM backend.
+- Listen for the wake word `kiki` using a lightweight first-stage local transcription probe before running the selected full Whisper model.
+- Store and recall long-term memories locally.
+- Use local document RAG.
+- Open approved files, folders, applications, and URLs.
+- Read and write the clipboard.
+- Inspect approved directories.
+- Execute shell commands only after a native per-command confirmation.
+- Use optional Gmail, Google Calendar, browser-context, MCP, web-search, and cloud AI integrations when explicitly configured.
+- Use custom tools and custom avatars inherited from Alice.
+
+## Local-first safety boundary
+
+Selecting a local service is treated as a cost and privacy boundary. Kiki does not silently switch from local Piper or local embeddings to OpenAI merely because cloud credentials happen to be stored.
+
+Direct shell commands remain protected by an Electron confirmation dialog. The inherited scheduled-command feature is currently blocked from all model providers because the original scheduler can execute persisted shell commands without the same per-command approval gate. Until that path is redesigned, Kiki does not expose `schedule_task` or `manage_scheduled_tasks` to the model.
+
+## First-run configuration
+
+The default stack is:
+
+- AI provider: Ollama
+- Assistant model: Ollama's configured default
+- Speech-to-text: local Whisper
+- Default Whisper model: Base
+- Wake word: `kiki`
+- Text-to-speech: local Piper
+- Embeddings: local
+
+Install and start Ollama before launching Kiki if you want the default local configuration to work immediately. LM Studio is also supported and can be selected in Settings.
+
+Larger Whisper models are downloaded on first use. Tiny English, Base, Small, Medium, and Large v3 are supported. Large models can require substantial disk space and download time.
+
+## Desktop permissions
+
+Kiki separates tool availability from execution permission. A model may be able to request a capability while Electron still requires user confirmation before consequential local actions occur.
+
+Local directory access is approved by root for the current session. Shell commands require an explicit Run once confirmation. Local application or path opening requires confirmation except for validated external web and mail URLs.
+
+## Downloads
+
+Kiki releases are published from this repository:
+
+https://github.com/Azimn/AliceMod/releases
+
+Release artifacts are named:
+
+- `Kiki-Windows-<version>-Setup.exe`
+- `Kiki-Mac-<version>-Installer.dmg`
+- `Kiki-Linux-<version>.AppImage`
+
+The updater is configured to use `Azimn/AliceMod` releases, not upstream Alice releases.
+
+## Manual Windows build and install
+
+Requirements:
+
+- Git
+- Node.js 22 or newer
+- Go 1.23
+- Python 3.11 for native Node module builds
+- Ollama or LM Studio for local LLM use
+
+Clone the repository and switch to the Kiki release-candidate branch:
+
+```powershell
+git clone https://github.com/Azimn/AliceMod.git
+cd AliceMod
+git switch agent/local-first-tool-calls
+npm ci
+```
+
+Download and verify the local embedding assets once:
+
+```powershell
 npm run setup:embeddings
-
-# 5. Compile backend
-npm run build:go
-
-# 6. Run dev environment
-$ npm run dev
 ```
 
-### 📦 Production Build
+Then perform the complete local verification and packaging sequence:
 
-Optionally, create an `app-config.json` file in the root directory for Google integration:
-
-```json
-{
-  "VITE_GOOGLE_CLIENT_ID": "",
-  "VITE_GOOGLE_CLIENT_SECRET": ""
-}
+```powershell
+npm run package:local
 ```
+
+`package:local` creates a Google-disabled local `app-config.json` only when no real configuration exists, runs the frontend and Go tests, rebuilds Electron native modules, prepares the verified local speech runtime, builds the backend and frontend, and invokes Electron Builder without publishing.
+
+A real `app-config.json` can still be supplied before packaging if Google integration is desired. The local preparation step never overwrites an existing file.
+
+## Development commands
+
+Run tests without packaging:
 
 ```bash
-# Build the app
-$ npm run build
+npm run verify:local
 ```
 
-Install the output from the `release/` directory.
+Build only the Go backend and application pieces:
 
+```bash
+npm run build:go
+npm run build:web
+```
 
-## 🤝 Contributing
+## Current release gate
 
-Ideas, bug reports, feature requests - all welcome! Open an issue or PR, or drop by to share your thoughts. Your input helps shape Alice into something wonderful 💚
+The repository contains GitHub Actions workflows for Windows, macOS, and Linux PR builds and tagged releases. They run the frontend Vitest suite, `go test ./...`, build the Go backend, rebuild Electron native modules, build the frontend, and package the application.
 
-## A full app overview with tutorials
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=aFTjmTRTLUM">
-    <img width="846" height="475" alt="image" src="https://github.com/user-attachments/assets/432211d2-d820-437d-9541-8cedbba1f770" />
-  </a>
-</p>
+At the time of this fork hardening work, GitHub Actions is not registered for the fork at the repository level, so those workflows have not yet executed on the Kiki branch. Do not treat a release as fully validated until the three-platform workflow completes successfully.
+
+See `docs/RELEASE_CHECKLIST.md` for the release gate.
+
+## Upstream project and license
+
+Kiki is a fork of Alice by pmbstyle:
+
+https://github.com/pmbstyle/Alice
+
+The upstream project is licensed under the MIT License, which remains included in this repository. Internal compatibility identifiers such as `AliceSettings`, the `alice-ai-app` package name, selected IPC/protocol identifiers, and the existing Electron app ID are intentionally retained where changing them would create migration or compatibility risk without improving the user-facing product.

@@ -31,18 +31,14 @@ func NewServer(config *config.Config, handler *api.Handler) *Server {
 func (s *Server) Start(port string) error {
 	router := mux.NewRouter()
 
-	// Add middleware
 	router.Use(loggingMiddleware)
 	router.Use(recoveryMiddleware)
 
-	// API routes
 	apiRouter := router.PathPrefix("/api").Subrouter()
 
-	// Health check
 	apiRouter.HandleFunc("/health", s.handler.HealthCheck).Methods("GET")
 	apiRouter.HandleFunc("/config", s.handler.GetConfig).Methods("GET")
 
-	// STT routes
 	sttRouter := apiRouter.PathPrefix("/stt").Subrouter()
 	sttRouter.HandleFunc("/transcribe", s.handler.TranscribeAudio).Methods("POST")
 	sttRouter.HandleFunc("/transcribe-audio", s.handler.TranscribeAudio).Methods("POST")
@@ -50,14 +46,12 @@ func (s *Server) Start(port string) error {
 	sttRouter.HandleFunc("/ready", s.handler.STTReady).Methods("GET")
 	sttRouter.HandleFunc("/info", s.handler.STTInfo).Methods("GET")
 
-	// TTS routes
 	ttsRouter := apiRouter.PathPrefix("/tts").Subrouter()
 	ttsRouter.HandleFunc("/synthesize", s.handler.SynthesizeSpeech).Methods("POST")
 	ttsRouter.HandleFunc("/voices", s.handler.GetVoices).Methods("GET")
 	ttsRouter.HandleFunc("/ready", s.handler.TTSReady).Methods("GET")
 	ttsRouter.HandleFunc("/info", s.handler.TTSInfo).Methods("GET")
 
-	// Embeddings routes
 	embeddingsRouter := apiRouter.PathPrefix("/embeddings").Subrouter()
 	embeddingsRouter.HandleFunc("/generate", s.handler.GenerateEmbedding).Methods("POST")
 	embeddingsRouter.HandleFunc("/batch", s.handler.GenerateEmbeddings).Methods("POST")
@@ -65,7 +59,6 @@ func (s *Server) Start(port string) error {
 	embeddingsRouter.HandleFunc("/ready", s.handler.EmbeddingsReady).Methods("GET")
 	embeddingsRouter.HandleFunc("/info", s.handler.EmbeddingsInfo).Methods("GET")
 
-	// Model management routes
 	modelsRouter := apiRouter.PathPrefix("/models").Subrouter()
 	modelsRouter.HandleFunc("/download/{service}", s.handler.DownloadModel).Methods("POST")
 	modelsRouter.HandleFunc("/status", s.handler.GetModelStatus).Methods("GET")
@@ -77,7 +70,7 @@ func (s *Server) Start(port string) error {
 		Addr:         loopbackAddress(port),
 		Handler:      handler,
 		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		WriteTimeout: 15 * time.Minute,
 		IdleTimeout:  60 * time.Second,
 	}
 
@@ -122,7 +115,6 @@ func (s *Server) Stop(ctx context.Context) error {
 	return nil
 }
 
-// loggingMiddleware logs HTTP requests
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -132,7 +124,6 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// recoveryMiddleware recovers from panics
 func recoveryMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {

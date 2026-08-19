@@ -27,7 +27,7 @@
             {{
               generalStore.statusMessage.includes('Error:')
                 ? 'Initialization Failed'
-                : 'Initializing Alice'
+                : 'Initializing Kiki'
             }}
           </p>
           <p
@@ -134,9 +134,8 @@ const conversationStore = useConversationStore()
 const sidebarContentElement = ref<null | HTMLElement>(null)
 const emit = defineEmits(['processRequest'])
 
-// Smart scrolling state
 const shouldAutoScroll = ref(true)
-const scrollThreshold = 100 // pixels from bottom to consider "at bottom"
+const scrollThreshold = 100
 
 const { openSidebar, chatInput, sideBarView, attachedFile } =
   storeToRefs(generalStore)
@@ -179,7 +178,7 @@ const openSettingsWindow = async () => {
 const changeSidebarView = async (newView: 'chat' | 'memories') => {
   sideBarView.value = newView
   if (newView === 'chat') {
-    shouldAutoScroll.value = true // Ensure we scroll when switching to chat
+    shouldAutoScroll.value = true
     await nextTick(() => scrollChatToBottom())
   }
 }
@@ -197,7 +196,7 @@ const chatInputHandle = async () => {
     debounceTimeout.value = window.setTimeout(async () => {
       const textToSend = chatInput.value.trim()
       chatInput.value = ''
-      shouldAutoScroll.value = true // Ensure we scroll after sending a message
+      shouldAutoScroll.value = true
       emit('processRequest', textToSend)
       clearAttachedFile()
     }, debounceDelay)
@@ -316,7 +315,6 @@ watch(
         settingsStore.successMessage = null
 
         setTimeout(() => {
-          // Keep chat selected when the user opens the panel after settings close.
           changeSidebarView('chat')
           if (window.aliceIPC) {
             window.aliceIPC.invoke('settings-window:close').catch(console.error)
